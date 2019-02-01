@@ -8,7 +8,7 @@ class Post(models.Model):
     title = models.CharField(max_length=200)
     text = models.TextField()
     created_date = models.DateTimeField(default=timezone.now)
-    published_date = models.DateTimeField(blank=True, null=True)
+    published_date = models.DateTimeField(blank=True, null=True,default=timezone.now)
 
     def publish(self):
         self.published_date = timezone.now()
@@ -17,4 +17,17 @@ class Post(models.Model):
     def __str__(self):
         return self.title
 
+
+class Companies(models.Model):
+    name = models.CharField(max_length=100)
+    token = models.CharField(max_length=100)
+    fullname = models.CharField(max_length=100,default='')
+
+    def publish(self):
+        self.save()
+
+    def __str__(self):
+        return 'Company name: '+self.name+' Company Token: '+self.token+' Company Full name: '+self.fullname
+
 # Create your models here.
+

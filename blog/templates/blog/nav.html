@@ -1,0 +1,198 @@
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+  <style>
+  body {
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* Create a column layout with Flexbox */
+  .row {
+    display: flex;
+  }
+
+
+  /* Left column (menu) */
+  .left {
+    flex: 15%;
+    height: 100vh;
+   
+    padding-left: 20px;
+    /*padding: 10px 0;*/
+  }
+
+  .left h2 {
+    padding-left: 8px;
+  }
+
+  /* Right column (page content) */
+  .right {
+    flex: 85%;
+    padding-left:65px;
+  }
+  .dropdown button {
+    background-color:#ffffff;
+    border: hidden;
+    color: #000000;
+  }
+
+  /* Style the search box */
+  #mySearch {
+    width: 100%;
+
+    font-size: 15px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    padding-top: 10px;
+    
+    padding-bottom: 5px;
+    padding-left: 11px;
+    border:1px solid #ddd;
+  }
+
+  /* Style the navigation menu inside the left column */
+  #myMenu {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    /*width:30px;*/
+    overflow: auto;
+    height: 100vh;
+  }
+  .navbar { margin-bottom: 10px;
+  background-color:#000000; } 
+  #naav a 
+  { 
+  color: #ffffff; }
+   #naav li a 
+  { 
+  color: #ffffff; }
+
+
+  #myMenu li a {
+    backgrxound-color: #fefefe;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    color: #6d6d6d;
+
+
+    
+
+    display: block
+  }
+
+  #myMenu li a:hover {
+    background-color: #eee;
+  }
+  </style>
+  </head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  <body>
+<!-- Navigation Bar -->
+
+    <nav class="navbar navbar-default" id="naav" >
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Sabertooth</a>
+    </div>
+    <ul class="nav navbar-nav">
+      <li><a href="#">Home</a></li>
+      <li><a href="#">Dashboard</a></li>
+      
+    </ul>
+  </div>
+</nav>
+
+
+  <div class="row">
+    <div class="left" style="background-color:#fbfbfb;">
+     
+      <input type="text" id="mySearch" onkeyup="myFunction()" placeholder="Search.." title="Type in a category">
+      <ul id="myMenu">
+       {% for company in companies %}
+       <li><a href="{% url 'clist_detail' pk=company.pk %}">{{company.fullname}}</a></li>  
+      {% endfor %}
+      
+        
+        
+      </ul>
+    </div>
+    
+    <div class="right" style="background-color:#fffff;">
+      <h2>Sabretooth Investments</h2>
+      <p>{{comp.token}}
+    <div class="dropdown">
+    <button class="btn btn-primary dropdown-toggle" id='buttons' type="button" data-toggle="dropdown">Dropdown Example 
+    <span class="caret"></span></button>
+    <ul class="dropdown-menu">
+      <li><a href="#">HTML</a></li>
+      <li><a href="#">CSS</a></li>
+      <li><a href="#">JavaScript</a></li>
+    </ul>
+  </div>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+  <!-- Scipts for Searching, etc -->
+
+  <script>
+  function myFunction() {
+    var input, filter, ul, li, a, i;
+    input = document.getElementById("mySearch");
+    filter = input.value.toUpperCase();
+    ul = document.getElementById("myMenu");
+    li = ul.getElementsByTagName("li");
+    for (i = 0; i < li.length; i++) {
+      a = li[i].getElementsByTagName("a")[0];
+      if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
+        li[i].style.display = "";
+      } else {
+        li[i].style.display = "none";
+      }
+    }
+  }
+  </script>
+
+  </body>
+  </html>
