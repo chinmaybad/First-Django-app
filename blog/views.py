@@ -4,6 +4,12 @@ from .models import Strategy
 from .models import Companies
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
+from celery.result import AsyncResult
+from .tasks import do_work
+from django.http import HttpResponse
+import json
+import logging
+logger = logging.getLogger(__name__)
 
 
 # Create your views here.
@@ -40,7 +46,27 @@ def createstrategy(request,pk):
                 return render(request, "blog/nav.html",{'companies': companies})
         else:
             companies = Companies.objects.all()
-            return render(request, "blog/nav.html",{'companies': companies})   
+            return render(request, "blog/nav.html",{'companies': companies})  
+def display_dashboard(request):    
+        task_obj = do_work.apply_async()
+        gloabl_task_id = task_obj.id
+    # do_work.delay()
+        logger.warning('ID = '+str(gloabl_task_id))
+        return render(request, 'blog/dashboard.html',{"task_id":task_obj.id})
+
+def start_work(request):
+     # the .delay() call here is all that's needed
+     # to convert the function to be called asynchronously     
+     # we can't say 'work done' here anymore because all we did was kick it off     
+        return HttpResponse('work kicked off!')
+
+def get_progress(request, task_id):
+        logger.warning('task_id : ' + task_id)
+        result = AsyncResult(task_id)
+        data = {'state': result.state,'details': result.info,'task_id':task_id}
+        logger.warning('Data : ' + str(data))
+        logger.warning('Received Task Id :' +str(task_id) + '\t Global task Id : '+str(task_id))
+        return HttpResponse(json.dumps(data), content_type='application/json') 
 
     
         	

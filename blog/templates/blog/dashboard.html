@@ -1,0 +1,52 @@
+<!-- {% load static %} -->
+<html>
+    <head>
+        <title>Django Girls blog</title>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
+        <link href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+    </head>
+		
+   <body>
+    <div class="page-header">
+        <h1><a href="/">Django Girls Blog</a></h1>
+    </div>
+	
+	<p id="demo">  </p>
+	<p id="state"> state </p>
+	<p id="details"> details </p>
+	<p id="current"> current </p>
+	<button type="button" onclick='change()'>Click me</button>
+	
+	<script>		
+		var i=0;
+		
+		function updateProgress (progressUrl, i) {			
+			fetch(progressUrl).then(function(response) {
+				response.json().then(function(data) {
+					// update the appropriate UI components
+					document.getElementById("demo").innerHTML = data.task_id;							
+					document.getElementById("state").innerHTML = 'state = ' + data.state;	
+					document.getElementById("details").innerHTML = data.details;
+					//document.getElementById("details").innerHTML = 'details = ' + data.details;	
+					document.getElementById("current").innerHTML = data.details.current;	
+				});
+			});		
+			/*if(i<=200){
+				setTimeout(updateProgress, 100, progressUrl, i+1);
+			}*/
+		}
+			
+		function change(){
+			document.getElementById("demo").innerHTML = 'Method called';
+			var progressUrl = '{% url "get_progress" task_id %}';  // django template usage
+		//document.getElementById("demo").innerHTML = "task_id = " + {{task_id}};					
+			updateProgress(progressUrl, i);
+			i=i+1
+			//document.getElementById("demo").innerHTML = 'Method End';
+		}
+		
+	</script>
+</body>
+</html>

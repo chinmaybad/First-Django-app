@@ -33,6 +33,10 @@
     .left h2 {
       padding-left: 8px;
     }
+ /*   #inst {
+       color: #7d7d7d;
+
+    }*/
 
     /* Right column (page content) */
     .right {
@@ -41,7 +45,7 @@
       margin-top: 20px;
     }
     .right select {
-      font-size: 17px;
+      font-size: 14px;
       background-color:#ffffff;
       border: hidden;
       color: #000000;
@@ -49,8 +53,15 @@
     }
     .right p{
 
-      font-size: 18px;
+      font-size: 16px;
 
+
+    }
+    .right b{
+      font-size: 16px;
+    }
+    .right input{
+      font-size: 14px;
     }
    
   
@@ -130,16 +141,15 @@
   <!-- Navigation Bar -->
 
       <nav class="navbar navbar-default" id="naav" >
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <a class="navbar-brand" href="#">Sabertooth</a>
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Sabertooth</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li><a href="#">Home</a></li>
+          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        </ul>
       </div>
-      <ul class="nav navbar-nav">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Dashboard</a></li>
-        
-      </ul>
-    </div>
   </nav>
 
 
@@ -160,13 +170,13 @@
       <div class="right" style="background-color:#ffffff">
         <form action="" method="POST">
           {% csrf_token %}
-          <b>Instrument:</b> 
-          <input type="text"  name="instrument" value="{{comp.token}}"> ({{comp.name}})
-          <p></p>
+          <p><b>Instrument:</b> 
+            <pre>
+          <input type="text" id="inst" name="instrument" value="{{comp.token}}"> ({{comp.name}})
+          </pre>
+          </p>
           
           <div class="Indicator">
-
-     
             <p><b>Select an Indicator  </b>  
              <select id="indicatorselect" name="indicator1">
                 <option value="1">Moving Average</option>
@@ -175,16 +185,17 @@
                 <option value="4">High</option>
                 <option value="5">Low</option>
              </select>
+            </p>
           </div>
-          </p>
-      <div class="Comparator" >
-      <p><b>Select a Comparator  </b>
-        <select id="comparatorselect" name="comparator">
-          <option value="1">Greater than</option>
-          <option value="2">Lower than</option>
-        </select>
-        </p>
-      </div>
+          
+          <div class="Comparator" >
+            <p><b>Select a Comparator  </b>
+              <select id="comparatorselect" name="comparator">
+                <option value="1">Greater than</option>
+                <option value="2">Lower than</option>
+                </select>
+            </p>
+          </div>
           <div class="Indicator2">
      
             <p><b>Select an Indicator to compare to </b>  
@@ -195,12 +206,14 @@
                 <option value="High">High</option>
                 <option value="Low">Low</option>
              </select>
+             </p>
           </div>
-          </p>
+          
           <b>Strategy:</b>
-  <input type="text" name="name" value="">
+          <input type="text" name="name" value="">
           <input formaction="submit" type="submit" value="Submit"/>
-</form>
+        </form>
+        </div>
 
 
 
