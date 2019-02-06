@@ -29,5 +29,33 @@ class Companies(models.Model):
     def __str__(self):
         return 'Company name: '+self.name+' Company Token: '+self.token+' Company Full name: '+self.fullname
 
+
+class Indicators(models.Model):
+    name=models.CharField(max_length=100)
+    # switcher={'movingaverage':'blabla'}
+
+    def publish(self):
+        self.save()
+
+    def __str__(self):
+        return 'indicator name: '+self.name
+
+    def evaluate(self):
+        pass
+
+
+class Strategy(models.Model):
+    name=models.CharField(max_length=100)
+    comparator=models.CharField(max_length=100)
+    indicator1=models.CharField(max_length=100)
+    indicator2=models.CharField(max_length=100)
+    instrument=models.CharField(max_length=100)
+
+
+        
+
+    
+
+
 # Create your models here.
 
