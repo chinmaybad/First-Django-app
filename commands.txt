@@ -1,0 +1,3 @@
+cd /d H:\SaberTooth\Website\Django\mysite
+myenv\Scripts\activate
+celery -A mysite worker --pool=eventlet

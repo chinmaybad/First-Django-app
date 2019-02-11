@@ -6,31 +6,48 @@
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
         <link rel="stylesheet" href="{% static 'css/blog.css' %}">
         <link href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+        <style>
+        	
+        	.strategies{
+        		font-size: 14px;
+        	}
+        </style>
     </head>
 		
-   <body>
+   <body onload="setInterval(change,1000)">
     <div class="page-header">
         <h1><a href="/">Django Girls Blog</a></h1>
     </div>
-	
-	<p id="demo">  </p>
+    <div class="strategies" >
 	<p id="state"> state </p>
-	<p id="details"> details </p>
-	<p id="current"> current </p>
-	<button type="button" onclick='change()'>Click me</button>
+	<p id="instruments"> inst </p>
+	<p id="price"> price </p>
+	<p id="volume"> volume </p>
+	<p id="task_id"> task_id </p>
+	<!--
+	{% for s in strat_list %}
+	<p id="{{forloop.counter}}"> {{forloop.counter}}</p>
 	
-	<script>		
+	{% endfor %}
+	-->
+	</div>
+	
+	
+	<script>
 		var i=0;
 		
-		function updateProgress (progressUrl, i) {			
+		function updateProgress (progressUrl) {			
 			fetch(progressUrl).then(function(response) {
 				response.json().then(function(data) {
 					// update the appropriate UI components
-					document.getElementById("demo").innerHTML = data.task_id;							
-					document.getElementById("state").innerHTML = 'state = ' + data.state;	
-					document.getElementById("details").innerHTML = data.details;
-					//document.getElementById("details").innerHTML = 'details = ' + data.details;	
-					document.getElementById("current").innerHTML = data.details.current;	
+					document.getElementById("state").innerHTML = data.state;							
+					document.getElementById("instruments").innerHTML = data.instruments;	
+					document.getElementById("price").innerHTML = data.price;					
+					document.getElementById("volume").innerHTML = data.volume;	
+					document.getElementById("task_id").innerHTML = data.task_id;	
+					//document.getElementById(id).innerHTML = '<br><br>state = ' + data.state +
+					//'<br>task_id = ' +data.task_id +'<br>price = ' +data.price + '<br>volume = ' +data.volume ;
+					//var str =  'state = ' + data.state + ' task_id = ' + data.task_id +' price = ' + data.details.price +' volume = ' + data.details.volume+'<br><br>';
 				});
 			});		
 			/*if(i<=200){
@@ -39,11 +56,18 @@
 		}
 			
 		function change(){
-			document.getElementById("demo").innerHTML = 'Method called';
-			var progressUrl = '{% url "get_progress" task_id %}';  // django template usage
-		//document.getElementById("demo").innerHTML = "task_id = " + {{task_id}};					
-			updateProgress(progressUrl, i);
-			i=i+1
+			/*
+				var id = 1;
+				
+				{% for s in strat_list %}
+					var progressUrl = '{% url "get_progress" s.task_id %}';  // django template usage		
+					setTimeout(updateProgress, 200, progressUrl, id);
+					id = id+1;
+					{% endfor %}
+				}
+			*/
+			var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
+			setTimeout(updateProgress, 200, progressUrl);
 			//document.getElementById("demo").innerHTML = 'Method End';
 		}
 		

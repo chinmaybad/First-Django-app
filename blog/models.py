@@ -51,6 +51,12 @@ class Strategy(models.Model):
     indicator2=models.CharField(max_length=100)
     instrument=models.CharField(max_length=100)
 
+    task_id = models.CharField(max_length=100, default='')
+    alloted = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return str('strategy :- ' + self.name + ' | ' + self.instrument)
+
 
         
 
