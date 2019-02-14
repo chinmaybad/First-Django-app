@@ -1,0 +1,20 @@
+[INFO  - 2019-02-14T11:05:12.207Z] GhostDriver - Main - running on port 50517
+[INFO  - 2019-02-14T11:05:16.735Z] Session [68e7a1a0-3048-11e9-975f-1d2f62d79483] - page.settings - {"XSSAuditingEnabled":false,"javascriptCanCloseWindows":true,"javascriptCanOpenWindows":true,"javascriptEnabled":true,"loadImages":true,"localToRemoteUrlAccessEnabled":false,"userAgent":"Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/538.1 (KHTML, like Gecko) PhantomJS/2.1.1 Safari/538.1","webSecurityEnabled":true}
+[INFO  - 2019-02-14T11:05:16.736Z] Session [68e7a1a0-3048-11e9-975f-1d2f62d79483] - page.customHeaders:  - {}
+[INFO  - 2019-02-14T11:05:16.736Z] Session [68e7a1a0-3048-11e9-975f-1d2f62d79483] - Session.negotiatedCapabilities - {"browserName":"phantomjs","version":"2.1.1","driverName":"ghostdriver","driverVersion":"1.2.0","platform":"windows-10-32bit","javascriptEnabled":true,"takesScreenshot":true,"handlesAlerts":false,"databaseEnabled":false,"locationContextEnabled":false,"applicationCacheEnabled":false,"browserConnectionEnabled":false,"cssSelectorsEnabled":true,"webStorageEnabled":false,"rotatable":false,"acceptSslCerts":false,"nativeEvents":true,"proxy":{"proxyType":"direct"}}
+[INFO  - 2019-02-14T11:05:16.736Z] SessionManagerReqHand - _postNewSessionCommand - New Session Created: 68e7a1a0-3048-11e9-975f-1d2f62d79483
+[ERROR - 2019-02-14T11:05:32.461Z] Session [68e7a1a0-3048-11e9-975f-1d2f62d79483] - page.onError - msg: TypeError: null is not an object (evaluating 't[this.name]')
+
+  phantomjs://platform/console++.js:263 in error
+[ERROR - 2019-02-14T11:05:32.462Z] Session [68e7a1a0-3048-11e9-975f-1d2f62d79483] - page.onError - stack:
+  has (https://static.parastorage.com/polyfill/v2/polyfill.min.js?features=Object.values,Object.entries,IntersectionObserver,es2015,es2016,es2017,fetch&flags=always,gated&unknown=polyfill&rum=0&callback=polyfillsAreLoaded:75)
+  m (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  (anonymous function) (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  oa (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  $endBatch (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  (anonymous function) (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  (anonymous function) (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  g (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+  s (https://static.parastorage.com/services/wix-bolt/1.946.0/bolt-main/app/bolt-main-r.2.js:1)
+
+  phantomjs://platform/console++.js:263 in error

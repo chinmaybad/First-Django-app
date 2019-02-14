@@ -1,3 +1,15 @@
 cd /d H:\SaberTooth\Website\Django\mysite
 myenv\Scripts\activate
-celery -A mysite worker --pool=eventlet
+celery -A mysite purge -f
+celery -A mysite worker --pool=solo
+
+
+
+cd /d H:\SaberTooth\Website\Django\mysite
+myenv\Scripts\activate
+celery -A mysite worker --pool=solo
+
+cd /d H:\SaberTooth\Website\Django\mysite
+myenv\Scripts\activate
+python manage.py runserver
+

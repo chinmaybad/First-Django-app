@@ -4,72 +4,117 @@
         <title>Django Girls blog</title>
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-        <link rel="stylesheet" href="{% static 'css/blog.css' %}">
         <link href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
         <style>
+             body {
+      				font-family: Arial, Helvetica, sans-serif;
+    
+    			  }
+			    * {
+			      box-sizing: border-box;
+			      font-size: 18px;
+			    }
         	
-        	.strategies{
-        		font-size: 14px;
-        	}
+	        	.strategies{
+	        		font-size: 14px;
+	        	}
+			    .navbar { 
+					margin-bottom: 10px;
+					background-color: #000000;
+					
+				 }
+			
+				#naav a 
+				{ 
+				 color: #ffffff; 
+				}
+				 #naav li a 
+				{ 
+				color: #ffffff;
+				 }
+				 #rest
+				 {
+				 	margin-left: 10px;
+				 }
         </style>
-    </head>
+   </head>
 		
    <body onload="setInterval(change,1000)">
-    <div class="page-header">
-        <h1><a href="/">Django Girls Blog</a></h1>
-    </div>
-    <div class="strategies" >
-	<p id="state"> state </p>
-	<p id="instruments"> inst </p>
-	<p id="price"> price </p>
-	<p id="volume"> volume </p>
-	<p id="task_id"> task_id </p>
-	<!--
+     <nav class="navbar " id="naav" >
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Sabertooth</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li><a href="{% url 'clist' %}">Home</a></li>
+          <li><a href="{% url 'manage' %}">Manage</a></li>
+          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        </ul>
+      </div>
+  </nav>
+  <div id="rest">
+
+
+<!-- 
 	{% for s in strat_list %}
-	<p id="{{forloop.counter}}"> {{forloop.counter}}</p>
+	<div class="panel panel-default">
+	 <div class="panel-body"><p id="{{forloop.counter}}"> {{forloop.counter}}</p></div>
 	
-	{% endfor %}
-	-->
 	</div>
+	{% endfor %} -->
+
+
 	
+	
+	<table id="my_table" class="table">
+	</table>
+
+	<a  href="{% url 'revoke' task_id %}">reset </a>
+	</div>
+
 	
 	<script>
-		var i=0;
 		
 		function updateProgress (progressUrl) {			
 			fetch(progressUrl).then(function(response) {
 				response.json().then(function(data) {
-					// update the appropriate UI components
-					document.getElementById("state").innerHTML = data.state;							
-					document.getElementById("instruments").innerHTML = data.instruments;	
-					document.getElementById("price").innerHTML = data.price;					
-					document.getElementById("volume").innerHTML = data.volume;	
-					document.getElementById("task_id").innerHTML = data.task_id;	
-					//document.getElementById(id).innerHTML = '<br><br>state = ' + data.state +
-					//'<br>task_id = ' +data.task_id +'<br>price = ' +data.price + '<br>volume = ' +data.volume ;
-					//var str =  'state = ' + data.state + ' task_id = ' + data.task_id +' price = ' + data.details.price +' volume = ' + data.details.volume+'<br><br>';
+
+					var str = "";
+
+					for(var key1 in data){
+						str += "<tr><th>Strategy</th>";
+						for(key2 in data[key1]){
+							str += "<th>" + key2 +"</th>";
+						}
+						str += "</tr>";
+						break;
+					}
+
+					for(var key1 in data){
+						str += "<tr><th>"+key1+"</th>";
+						for(key2 in data[key1]){
+							str += "<td>" + data[key1][key2] +"</td>";
+						}
+						str += "</tr>";
+					}
+
+					document.getElementById("my_table").innerHTML = "<table class=\"table\">" + str +"</table>";
 				});
 			});		
-			/*if(i<=200){
-				setTimeout(updateProgress, 100, progressUrl, i+1);
-			}*/
 		}
 			
-		function change(){
-			/*
-				var id = 1;
-				
-				{% for s in strat_list %}
-					var progressUrl = '{% url "get_progress" s.task_id %}';  // django template usage		
-					setTimeout(updateProgress, 200, progressUrl, id);
-					id = id+1;
-					{% endfor %}
+		function change(){			
+					// windows.alert("here 1");			
+					var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
+					setTimeout(updateProgress, 0, progressUrl);											
 				}
-			*/
-			var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
-			setTimeout(updateProgress, 200, progressUrl);
+			
+			// var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
+			// setTimeout(updateProgress, 200, progressUrl);
 			//document.getElementById("demo").innerHTML = 'Method End';
-		}
+		
 		
 	</script>
 </body>

@@ -1,0 +1,117 @@
+<!-- {% load static %} -->
+<html>
+    <head>
+        <title>Django Girls blog</title>
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+      
+        <link href="//fonts.googleapis.com/css?family=Lobster&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    
+        <style>
+         body {
+      font-family: Arial, Helvetica, sans-serif;
+    
+    }
+    * {
+      box-sizing: border-box;
+      font-size: 18px;
+    }
+            
+    .strategies{
+        font-size: 14px;
+    }
+    .navbar { 
+        margin-bottom: 10px;
+        background-color: #000000;
+        
+         }
+         #rest{
+            margin-left: 10px;
+         } 
+    #naav a 
+    { 
+     color: #ffffff; 
+    }
+     #naav li a 
+    { 
+    color: #ffffff;
+     }
+        </style>
+    </head>
+        
+   <body onload="change()">
+   <nav class="navbar " id="naav" >
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Sabertooth</a>
+        </div>
+        <ul class="nav navbar-nav">
+           <li><a href="{% url 'clist' %}">Home</a></li>
+          <li><a href="{% url 'manage' %}">Manage</a></li>
+          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        </ul>
+      </div>
+  </nav>
+  <div id="rest">
+
+
+
+    <!-- {% for s in strat_list %}
+    <div class="panel panel-default">
+     <div class="panel-body"><p id="{{forloop.counter}}"> {{s.name}}</p></div>
+    
+    </div>
+    {% endfor %} -->
+
+
+    
+        <table id="demo" ></table>
+        <p id="demo1"> </p>
+        <a href="{% url 'clist' %}">Go back</a>
+        </div>
+
+
+
+        
+        
+    <!--
+    {% for s in strat_list %}
+    <p id="{{forloop.counter}}"> {{forloop.counter}}</p>
+    
+    {% endfor %}
+    -->
+    
+    
+    
+    <script>
+            
+        function change(){
+            var str = "";
+            {% for s in strat_list %}
+                // str += "<tr><td><b>  " +"{{s.name}}"+ "</b></td><td>"+   "<a href=\"{% url 'strat_detail' pk=s.pk %}\"                     >Remove</a>"+  "</td></tr>";
+                    
+                    var a="{{s.pk}}"
+                    str += "<tr><td><b>  " +"{{s.name}}"+ "</b></td><td>"+        "<button onclick=\"myFunction("+a+")\"                     >Remove</a>"+  "</td></tr>";
+            {% endfor %}
+            document.getElementById("demo1").innerHTML = "<table class=\"table\""+">" + str + "</table>";
+                    
+                    
+                }
+        function myFunction(s) {
+              var txt;
+              if (confirm("Are you sure you want to delete the strategy?")) {
+                {% for a in strat_list %}
+                if({{a.pk}}==s)
+                    window.location.href = "{% url 'strat_detail' pk=a.pk %}";
+                {% endfor %}
+                
+              } else {
+                
+              }
+              document.getElementById("demo").innerHTML = txt;
+        }
+        
+    </script>
+</body>
+</html>

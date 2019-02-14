@@ -1,7 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .models import Post
-from .models import Strategy
-from .models import Companies
+from .models import Strategy, Companies, Refreshed
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from celery.result import AsyncResult
@@ -9,10 +8,12 @@ from .tasks import do_work
 from django.http import HttpResponse
 import json
 import logging
+import pandas as pd
+import os
+
 logger = logging.getLogger(__name__)
 
 
-# Create your views here.
 def post_list(request):
 	posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
 	return render(request, 'blog/post_lists.html', {'posts': posts})
@@ -22,6 +23,20 @@ def post_detail(request, pk):
 
 def clist(request):
 	companies = Companies.objects.all()
+
+	print('reading csv in NAV | clist')
+	path = os.getcwd() + '/blog/extras/task.csv'
+	df = pd.read_csv(path, index_col=False)		
+	task_id = str(df['task_id'][0])
+
+	result = AsyncResult(task_id)
+	print('State = ' + str(result.state))
+
+	if(not result.state == "PROGRESS"):
+		task_obj = do_work.apply_async()
+		task_id = task_obj.id
+		print('Assigned new ID = ' + str(task_id))
+
 	return render(request, 'blog/nav.html', {'companies': companies})
 
 def clist_detail(request,pk):
@@ -39,69 +54,86 @@ def createstrategy(request,pk):
 			strat.name= request.POST.get('name')
 			strat.instrument= request.POST.get('instrument')
 
-			task_obj = do_work.apply_async([s.pk])
-			strat.task_id = task_obj.id
 			strat.save()
 
-			companies = Companies.objects.all()                
+			companies = Companies.objects.all()      
 
+			r = Refreshed(name="Strategy")
+			r.save()
+			print("\nAdded refresh object")
 			return render(request, "blog/nav.html",{'companies': companies})
 	else:
 		companies = Companies.objects.all()
 		return render(request, "blog/nav.html",{'companies': companies})  
 
 
-def display_dashboard(request):    
-	# strat_list = Strategy.objects.all()
-	# task_id = ''
+def display_dashboard(request):    	
 
-	# for s in strat_list:
-	# 	print('\n\nFor '+ str(s))
+	strat_list = Strategy.objects.all()
 
-	# result = AsyncResult(s.task_id)
-	# state = result.state
-	# print('original state : '+state)
+	print('reading csv')
+	path = os.getcwd() + '/blog/extras/task.csv'
+	df = pd.read_csv(path, index_col=False)		
+	task_id = str(df['task_id'][0])
 
-	# if(not str(state) == 'PROGRESS'):
-	# print('passing instrument as parameter : '+ str(s))
-	# task_obj = do_work.apply_async(args=[s.instrument] , kwargs={'kwarg1':'token'})
-	# task_obj = do_work.apply_async([s.pk] , expires=30)
-	task_obj = do_work.apply_async(expires=45)
-	print('Assigned new ID = ' + str(task_obj.id))
-	# s.task_id = task_obj.id
+	result = AsyncResult(task_id)
+	print('State = ' + str(result.state))
 
-	# s.save()
+	if(not result.state == "PROGRESS"):
+		task_obj = do_work.apply_async()
+		task_id = task_obj.id
+		print('Assigned new ID = ' + str(task_id))
 
-	# print('Data sent to Dashboard.html')
-	# for s in strat_list:
-	# 	print(str(s) + ' task_id = ' + str(s.task_id))
-	return render(request, 'blog/dashboard.html',{"task_id" : task_obj.id})
+
+	return render(request, 'blog/dashboard.html',{"task_id" : task_id, "strat_list" : strat_list})
+
+
+
+def revoke(request,task_id):
+
+	strat_list = Strategy.objects.all()
+	task_obj = do_work.apply_async()
+
+	path = os.getcwd() + '/blog/extras/task.csv'
+	df = pd.read_csv(path, index_col=False)		
+	df['task_id'] = task_obj.id
+	df.to_csv(path, index=False)
+
+	return redirect('/dashboard',{"task_id":task_obj.id,"strat_list":strat_list})
+
+
 
 def get_progress(request, task_id):
 	print('get_progress :: task_id :- ' + task_id)
 	result = AsyncResult(task_id)
 	data = dict()
 	try:
-		data = {
-			'state': result.state,
-			'instruments': result.info['instruments'],
-			'price': result.info['price'],
-			'volume': result.info['volume'],
-			'task_id':task_id
-			}
-		print('\n####Data : ' + str(data))
+		# data = {
+		# 	'state': result.state,
+		# 	'meta' : result.info
+		# 	}
+		data = result.info
+		# print('\n####Data : ' + str(data))
 	except:
-		print('Error RESULT \n state = ' + str(result.state) + '\tDetails = '+str(result.info))
-		data = {
-			'state': 'EXCEPT',
-			'instruments' : 12121,
-			'price': 111,
-			'volume': 99999,
-			'task_id':task_id
-			}
+		# print('Error RESULT \n state = ' + str(result.state) + '\tDetails = '+str(result.info))
+		print('EXCEPT')
 		pass	
-	# logger.warning('Received Task Id :' +str(task_id) + '\t Global task Id : '+str(task_id))
+
 	return HttpResponse(json.dumps(data), content_type='application/json') 
 
 	
 			
+
+
+def manage(request):
+	strat_list = Strategy.objects.all()
+	return render(request, 'blog/manage.html',{"strat_list":strat_list})
+
+def strat_detail(request,pk):
+	strat_list = Strategy.objects.all()
+	strat = get_object_or_404(Strategy,pk=pk)
+	strat.delete()
+	r = Refreshed(name="Strategy")
+	r.save()
+	print("\nAdded refresh object")
+	return redirect('manage')

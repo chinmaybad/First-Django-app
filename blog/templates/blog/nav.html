@@ -1,118 +1,118 @@
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
-    <style>
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-    }
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+<style>
+body {
+  font-family: Arial, Helvetica, sans-serif;
+}
 
-    * {
-      box-sizing: border-box;
-      font-size: 18px;
-    }
+* {
+  box-sizing: border-box;
+  font-size: 18px;
+}
 
-    /* Create a column layout with Flexbox */
-    .row {
-      display: flex;
-    }
-
-
-    /* Left column (menu) */
-    .left {
-      flex: 15%;
-      height: 100vh;
-     
-      padding-left: 20px;
-      /*padding: 10px 0;*/
-    }
-
-    .left h2 {
-      padding-left: 8px;
-    }
- /*   #inst {
-       color: #7d7d7d;
-
-    }*/
-
-    /* Right column (page content) */
-    .right {
-      flex: 85%;
-      padding-left:65px;
-      margin-top: 20px;
-    }
-    .right select {
-      font-size: 14px;
-      background-color:#ffffff;
-      border: hidden;
-      color: #000000;
-
-    }
-    .right p{
-
-      font-size: 16px;
+/* Create a column layout with Flexbox */
+.row {
+  display: flex;
+}
 
 
-    }
-    .right b{
-      font-size: 16px;
-    }
-    .right input{
-      font-size: 14px;
-    }
-   
+/* Left column (menu) */
+.left {
+  flex: 15%;
+  height: 100vh;
+ 
+  padding-left: 20px;
+  /*padding: 10px 0;*/
+}
+
+.left h2 {
+  padding-left: 8px;
+}
+/*   #inst {
+   color: #7d7d7d;
+
+}*/
+
+/* Right column (page content) */
+.right {
+  flex: 85%;
+  padding-left:65px;
+  margin-top: 20px;
+}
+.right select {
+  font-size: 14px;
+  background-color:#ffffff;
+  border: hidden;
+  color: #000000;
+
+}
+.right p{
+
+  font-size: 16px;
+
+
+}
+.right b{
+  font-size: 16px;
+}
+.right input{
+  font-size: 14px;
+}
+
+
+
+/* Style the search box */
+#mySearch {
+  width: 100%;
+
+  font-size: 15px;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-top: 10px;
   
+  padding-bottom: 5px;
+  padding-left: 11px;
+  border:1px solid #ddd;
+}
 
-    /* Style the search box */
-    #mySearch {
-      width: 100%;
-
-      font-size: 15px;
-      margin-top: 20px;
-      margin-bottom: 20px;
-      padding-top: 10px;
-      
-      padding-bottom: 5px;
-      padding-left: 11px;
-      border:1px solid #ddd;
-    }
-
-    /* Style the navigation menu inside the left column */
-    #myMenu {
-      list-style-type: none;
-      padding: 0;
-      margin: 0;
-      /*width:30px;*/
-      overflow: auto;
-      height: 100vh;
-    }
-    .navbar { margin-bottom: 10px;
-    background-color:#000000; } 
-    #naav a 
-    { 
-    color: #ffffff; }
-     #naav li a 
-    { 
-    color: #ffffff; }
+/* Style the navigation menu inside the left column */
+#myMenu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  /*width:30px;*/
+  overflow: auto;
+  height: 100vh;
+}
+.navbar { margin-bottom: 10px;
+background-color:#000000; } 
+#naav a 
+{ 
+color: #ffffff; }
+ #naav li a 
+{ 
+color: #ffffff; }
 
 
-    #myMenu li a {
-      backgrxound-color: #fefefe;
-      padding: 12px;
-      text-decoration: none;
-      font-size: 14px;
-      color: #6d6d6d;
-      display: block
-    }
+#myMenu li a {
+  backgrxound-color: #fefefe;
+  padding: 12px;
+  text-decoration: none;
+  font-size: 14px;
+  color: #6d6d6d;
+  display: block
+}
 
-    #myMenu li a:hover {
-      background-color: #eee;
-    }
-    </style>
-    </head>
+#myMenu li a:hover {
+  background-color: #eee;
+}
+</style>
+</head>
 
 
 
@@ -120,24 +120,7 @@
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    <body>
+<body>
   <!-- Navigation Bar -->
 
       <nav class="navbar navbar-default" id="naav" >
@@ -147,6 +130,7 @@
         </div>
         <ul class="nav navbar-nav">
           <li><a href="#">Home</a></li>
+          <li><a href="{% url 'manage' %}">Manage</a></li>
           <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
         </ul>
       </div>
@@ -179,11 +163,11 @@
           <div class="Indicator">
             <p><b>Select an Indicator  </b>  
              <select id="indicatorselect" name="indicator1">
-                <option value="1">Moving Average</option>
-                <option value="2">RSI</option>
-                <option value="3">Price</option>
-                <option value="4">High</option>
-                <option value="5">Low</option>
+                <option value="ma_price">Moving Average Price</option>
+				<option value="ma_volume">Moving Average Volume</option>
+                <option value="RSI">RSI</option>
+                <option value="price">Price</option>
+				<option value="volume">Volume</option>
              </select>
             </p>
           </div>
@@ -200,11 +184,12 @@
      
             <p><b>Select an Indicator to compare to </b>  
              <select id="indicatorselect2" name="indicator2">
-                <option value="MovingAverage">Moving Average</option>
+                <option value="ma_price">Moving Average Price</option>
+				<option value="ma_volume">Moving Average Volume</option>
                 <option value="RSI">RSI</option>
-                <option value="Price">Price</option>
-                <option value="High">High</option>
-                <option value="Low">Low</option>
+                <option value="price">Price</option>
+				<option value="volume">Volume</option>
+                
              </select>
              </p>
           </div>
