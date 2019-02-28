@@ -1,10 +1,8 @@
-import time
 import logging
 logger = logging.getLogger(__name__)
 import logging
 from kiteconnect import KiteTicker
 from time import sleep
-import time
 import pandas as pd
 import datetime
 from threading import Timer
@@ -17,7 +15,6 @@ class Work(object):
 	def __init__(self, task):
 		self.task = task
 		print('MY_INIT METHOD CALLED '+str(self.task.request.id))		
-
 		path = os.getcwd() + '/blog/extras/task.csv'
 		df = pd.read_csv(path, index_col=False)		
 		df['task_id'] = self.task.request.id
@@ -26,25 +23,27 @@ class Work(object):
 
 		self.strat_list = Strategy.objects.all()		
 		self.tokens = list()	
-		self.global_data = dict()
-		self.tick_count = 1
+		self.global_data = dict()		#price or volume only
+		self.strat_data = dict()		#indicator 1 & 2 , status, etc
+		self.tick_count, self.min_count = 1, 0
+
+		self.time_map = {'minute' : 1, 'day' : 30, '3minute' : 2, '5minute' : 3, '10minute' : 5, '15minute' : 7, '30minute' : 10 , '60minute' : 15}
+
 		
 		print('###BLOCK 1')
 		for s in self.strat_list:
 			t = int(s.instrument)
 			self.tokens.append(t)
-			self.global_data[t] = dict()
+			self.global_data[t] = dict.fromkeys(['price', 'volume'])
+			self.strat_data[s.pk] = dict({'status' : False})
+			s.indicator1 = s.indicator1.down_cast()
+			s.indicator2 = s.indicator2.down_cast()
 
 		self.tokens = list(set(self.tokens))		#repeated tokens || multiple strategies on single instrument
-
-		for s in self.strat_list:
-			self.global_data[int(s.instrument)][s.indicator1] = None
-			self.global_data[int(s.instrument)][s.indicator2] = None
 			
-
 		print('###BLOCK 2')
 		self.kf = KiteFetcher(self.access_token)
-		self.update_indicators(self.tokens)
+		self.update_indicators(self.strat_list)
 
 		print('MY_INIT : Gloal data :- ' + str(self.global_data))
 
@@ -55,9 +54,13 @@ class Work(object):
 		old_strat_list = self.strat_list
 		self.strat_list = Strategy.objects.all()
 		self.tokens.clear()
+		pk_list = list()
 
 		for s in self.strat_list:
+			s.indicator1 = s.indicator1.down_cast()
+			s.indicator2 = s.indicator2.down_cast()
 			self.tokens.append(int(s.instrument))
+			pk_list.append(s.pk)
 		self.tokens = list(set(self.tokens))
 
 		new_global_data = dict(self.global_data)
@@ -66,47 +69,67 @@ class Work(object):
 				_ = new_global_data.pop(k, None)
 		self.global_data = new_global_data
 
+		new_strat_data = dict(self.strat_data)
+		for k in self.strat_data.keys():
+			if(k not in pk_list):
+				_ = new_strat_data.pop(k, None)
+		self.strat_data = new_strat_data
 
-		indicators_to_update = list()
+
+		strats_to_update = list()
 		for s in self.strat_list:
 			if(s not in old_strat_list):
 				t = int(s.instrument)
-				if(int(s.instrument) not in self.global_data.keys()):
-					self.global_data[t] = dict()
+				if(t not in self.global_data.keys()):
+					self.global_data[t] = dict.fromkeys(['price','volume'])
 
-				self.global_data[t][s.indicator1] = None
-				self.global_data[t][s.indicator2] = None
-				indicators_to_update.append(t)
+				self.strat_data[s.pk] = dict({'status' : False})
+				strats_to_update.append(s)
 
-		self.update_indicators(indicators_to_update)
+		self.update_indicators(strats_to_update)
 		print("Strategies updated successfully")
 
 
 
+	def update_indicators(self, strats_to_update):
+		min_count += 1
+		t = Timer(45, self.update_indicators)		#45 sec timer equivalent to 1 minute with code execution
+		t.start()
 
+		for s in strats_to_update:
+			if(s.indicator1.name not in ['price', 'volume']):
+				if(min_count % self.time_map[s.indicator1.interval]  ==  0):
+					self.strat_data[s.pk]['indicator1'] = s.indicator1.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))
 
-	def update_indicators(self, passed_tokens):
-		for t in passed_tokens:
-			indi_list = list(self.global_data[t].keys())
-			update = self.kf.get_passed_indicators(t, list(indi_list))
-
-			for i in indi_list:
-				if(i == 'price' or i == 'volume'):
-					pass
-				else:
-					self.global_data[t][i] = update[i]
+			if(s.indicator2.name not in ['price', 'volume']):
+				if(min_count % self.time_map[s.indicator2.interval]  ==  0):
+					self.strat_data[s.pk]['indicator2'] = s.indicator2.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))		
 
 
 	def strategy_status(self, s):
-		inst = int(s.instrument)
-		indicator1 = self.global_data[inst][s.indicator1]
-		indicator2 = self.global_data[inst][s.indicator2]
+		if(s.indicator1.name in ['price', 'volume']):
+			self.strat_data[s.pk]['indicator1'] = self.global_data[int(s.instrument)][s.indicator1.name]
+		indicator1 = self.strat_data[s.pk]['indicator1']
 
-		if(int(s.comparator) == 1):		#greater than
+		if(s.indicator2.name in ['price', 'volume']):
+			self.strat_data[s.pk]['indicator2'] = self.global_data[int(s.instrument)][s.indicator2.name]
+		indicator2 = self.strat_data[s.pk]['indicator2']
+
+		c = int(s.comparator)
+		if(c == 1):		#greater than
 			if(indicator1 > indicator2):
 				return True
-		else:
-			if(indicator1 <= indicator2):
+
+		else if(c == 2):	#less than
+			if(indicator1 < indicator2):
+				return True
+
+		else if(c == 3):	#crosses above
+			if(self.strat_data[s.pk]['status']==False and  indicator1 > indicator2):
+				return True
+
+		else if(c == 4):	#crosses below
+			if(self.strat_data[s.pk]['status']==False and  indicator1 < indicator2):
 				return True
 		
 		return False
@@ -135,16 +158,18 @@ class Work(object):
 			for s in self.strat_list:
 				t = int(s.instrument)
 
+				self.strat_data[s.pk]['status'] = self.strategy_status(s)
+
 				strategy_meta[str(s)] = {
-					'status' : self.strategy_status(s),
+					'status' : self.strat_data[s.pk]['status'],
 					'price' : self.global_data[t]['price'],
 					'volume' : self.global_data[t]['volume'],
-					'indicator 1' : str(self.global_data[t][s.indicator1]) + "("+ s.indicator1 +")" ,
-					'indicator 2' : str(self.global_data[t][s.indicator2]) + "("+ s.indicator2 +")" 
+					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "("+ str(s.indicator1) +")" ,
+					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "("+ str(s.indicator2) +")" 
 				}
 
 			self.task.update_state(state='PROGRESS', meta=strategy_meta)
-			# print(strategy_meta)
+			print(strategy_meta)
 
 			if(self.tick_count == 0):
 				r = Refreshed.objects.all().filter(name = 'Strategy')

@@ -155,14 +155,12 @@ color: #ffffff; }
         <form action="" method="POST">
           {% csrf_token %}
           <p><b>Instrument:</b> 
-            <pre>
           <input type="text" id="inst" name="instrument" value="{{comp.token}}"> ({{comp.name}})
-          </pre>
           </p>
           
           <div class="Indicator">
             <p><b>Select an Indicator  </b>  
-             <select id="indicatorselect" name="indicator1">
+             <select id="indicatorselect" name="indicator1" onchange="showOptions">
                 <option value="ma_price">Moving Average Price</option>
 				<option value="ma_volume">Moving Average Volume</option>
                 <option value="RSI">RSI</option>
@@ -174,10 +172,10 @@ color: #ffffff; }
           
           <div class="Comparator" >
             <p><b>Select a Comparator  </b>
-              <select id="comparatorselect" name="comparator">
-                <option value="1">Greater than</option>
-                <option value="2">Lower than</option>
-                </select>
+				<select id="comparatorselect" name="comparator">
+					<option value="1">Greater than</option>
+					<option value="2">Lower than</option>
+				</select>
             </p>
           </div>
           <div class="Indicator2">
@@ -200,19 +198,36 @@ color: #ffffff; }
         </form>
         </div>
 
-
-
-
+<!--		
+		<input type="textbox" name="other" style="visibility:hidden;"/>
+		<select id="indicatorselect2" name="indicator2" style="visibility:hidden;">
+			<option value="ma_price">Moving Average Price</option>
+			<option value="ma_volume">Moving Average Volume</option>
+			<option value="RSI">RSI</option>
+			<option value="price">Price</option>
+			<option value="volume">Volume</option>               
+		</select>
 
     </div>
   </div>
 
 
 
+<!-- Scipts for displaying hidden field options 
 
+	<script type="text/javascript">
+	$('#indicatorselect1').bind('onchange',function(){
+		if (this.value==='other')
+		{
+		this.myform['other'].style.visibility='visible'
+		}
+		else {
+		this.myform['other'].style.visibility='hidden'
+		};
+	}
+	</script>
 
-
-
+-->
 
 
 

@@ -90,7 +90,6 @@ def display_dashboard(request):
 
 
 def revoke(request,task_id):
-
 	strat_list = Strategy.objects.all()
 	task_obj = do_work.apply_async()
 
@@ -132,7 +131,11 @@ def manage(request):
 def strat_detail(request,pk):
 	strat_list = Strategy.objects.all()
 	strat = get_object_or_404(Strategy,pk=pk)
+
+	strat.indicator1.delete()
+	strat.indicator2.delete()
 	strat.delete()
+	
 	r = Refreshed(name="Strategy")
 	r.save()
 	print("\nAdded refresh object")

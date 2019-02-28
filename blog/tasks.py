@@ -29,6 +29,6 @@ print(result.info)  # metadata will be here
 Solution to error :- JSON dumps
 Another working solution is to use eventlet (`pip install eventlet` ->
 `celery -A your_app_name worker --pool=eventlet`).
-This way it is possible to have para llel-running tasks on Windows.
+This way it is possible to have parallel-running tasks on Windows.
 
 """
