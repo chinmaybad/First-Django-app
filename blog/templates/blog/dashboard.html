@@ -81,8 +81,8 @@
 			fetch(progressUrl).then(function(response) {
 				response.json().then(function(data) {
 
-					var str = "";
-
+					var str = "", trueStr="", falseStr="";
+				// header
 					for(var key1 in data){
 						str += "<tr><th>Strategy</th>";
 						for(key2 in data[key1]){
@@ -93,14 +93,24 @@
 					}
 
 					for(var key1 in data){
-						str += "<tr><th>"+key1+"</th>";
-						for(key2 in data[key1]){
-							str += "<td>" + data[key1][key2] +"</td>";
+						if(data[key1]['status'] == 'True'){
+							trueStr += "<tr bgcolor=\"#00FF00\"><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								trueStr += "<td>" + data[key1][key2] +"</td>";
+							}
+							trueStr += "</tr>";
 						}
-						str += "</tr>";
+						else{
+							falseStr += "<tr><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								falseStr += "<td>" + data[key1][key2] +"</td>";
+							}
+							falseStr += "</tr>";
+						}
+						
 					}
 
-					document.getElementById("my_table").innerHTML = "<table class=\"table\">" + str +"</table>";
+					document.getElementById("my_table").innerHTML = "<table class=\"table\">" + str + trueStr + falseStr +"</table>";
 				});
 			});		
 		}

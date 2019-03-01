@@ -92,17 +92,17 @@ class Work(object):
 
 
 	def update_indicators(self, strats_to_update):
-		min_count += 1
+		self.min_count += 1
 		t = Timer(45, self.update_indicators)		#45 sec timer equivalent to 1 minute with code execution
 		t.start()
 
 		for s in strats_to_update:
 			if(s.indicator1.name not in ['price', 'volume']):
-				if(min_count % self.time_map[s.indicator1.interval]  ==  0):
+				if(s.indicator1.name == 'number' or self.min_count % self.time_map[s.indicator1.interval]  ==  0):
 					self.strat_data[s.pk]['indicator1'] = s.indicator1.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))
 
 			if(s.indicator2.name not in ['price', 'volume']):
-				if(min_count % self.time_map[s.indicator2.interval]  ==  0):
+				if(s.indicator2.name == 'number' or self.min_count % self.time_map[s.indicator2.interval]  ==  0):
 					self.strat_data[s.pk]['indicator2'] = s.indicator2.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))		
 
 
@@ -120,15 +120,15 @@ class Work(object):
 			if(indicator1 > indicator2):
 				return True
 
-		else if(c == 2):	#less than
+		elif(c == 2):	#less than
 			if(indicator1 < indicator2):
 				return True
 
-		else if(c == 3):	#crosses above
+		elif(c == 3):	#crosses above
 			if(self.strat_data[s.pk]['status']==False and  indicator1 > indicator2):
 				return True
 
-		else if(c == 4):	#crosses below
+		elif(c == 4):	#crosses below
 			if(self.strat_data[s.pk]['status']==False and  indicator1 < indicator2):
 				return True
 		
@@ -161,7 +161,7 @@ class Work(object):
 				self.strat_data[s.pk]['status'] = self.strategy_status(s)
 
 				strategy_meta[str(s)] = {
-					'status' : self.strat_data[s.pk]['status'],
+					'status' : str(self.strat_data[s.pk]['status']),
 					'price' : self.global_data[t]['price'],
 					'volume' : self.global_data[t]['volume'],
 					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "("+ str(s.indicator1) +")" ,

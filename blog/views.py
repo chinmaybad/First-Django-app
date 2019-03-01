@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from .models import Post
-from .models import Strategy, Companies, Refreshed
+from .models import Strategy, Companies, Refreshed, Indicator, Choices
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from celery.result import AsyncResult
@@ -10,6 +10,7 @@ import json
 import logging
 import pandas as pd
 import os
+from django.apps import apps
 
 logger = logging.getLogger(__name__)
 
@@ -37,31 +38,172 @@ def clist(request):
 		task_id = task_obj.id
 		print('Assigned new ID = ' + str(task_id))
 
-	return render(request, 'blog/nav.html', {'companies': companies})
+
+	indilist=Indicator.__subclasses__()   
+	indicatorl=list()
+	for a in indilist:
+		a=str(a).split(".")[2]
+		a=a.split("\'")[0]
+		indicatorl.append(a) 
+
+	return render(request, 'blog/nav.html', {'companies': companies,"indicatorlist":indicatorl})
 
 def clist_detail(request,pk):
 	companies = Companies.objects.all()
 	comp = get_object_or_404(Companies,pk=pk)
-	return render(request, 'blog/nav.html', {'companies': companies,'comp':comp})
+	indilist=Indicator.__subclasses__()   
+	indicatorl=list()
+	for a in indilist:
+		a=str(a).split(".")[2]
+		a=a.split("\'")[0]
+		indicatorl.append(a) 
+
+	return render(request, 'blog/nav.html', {'companies': companies,'comp':comp,"indicatorlist":indicatorl})
+
+
+def updatestrategy(request,pk):
+	if request.method == 'POST':
+		sid=request.POST.get('strat')
+		strat = get_object_or_404(Strategy,pk=sid)
+		companies = Companies.objects.all()
+		# len1=int(request.POST.get('for1'))
+		# len2=int(request.POST.get('for2'))
+		
+		indi1=apps.get_model("blog",str(strat.indicator1))()
+
+		indi2=apps.get_model("blog",str(strat.indicator2))()
+		print(strat.id)
+
+		fullfieldlist=indi1._meta.get_fields(include_parents=False)
+		shortfieldlist=list()
+		i=0
+		print(str(fullfieldlist))
+
+		for a in fullfieldlist:
+			if i==0:
+				pass
+			else:
+				
+				a=str(a).split(".")[2]
+				a=a.split("\'")[0]
+				shortfieldlist.append(a)
+			i+=1
+	   
+		c=True
+
+
+		for a in shortfieldlist:
+			if not request.POST.get(str(a)+"1"):
+				c=False
+
+		fullfieldlist2=indi2._meta.get_fields(include_parents=False)
+		shortfieldlist2=list()
+		print("----------------------------------------")
+		i=0
+
+		for a in fullfieldlist2:
+			if i==0:
+				pass
+			else:
+			   
+				a=str(a).split(".")[2]
+				a=a.split("\'")[0]
+				shortfieldlist.append(a)
+			i+=1
+	  
+
+		for a in shortfieldlist2:
+			if not request.POST.get(str(a)+"2"):
+				c=False
+
+
+
+		if c:
+			for a in shortfieldlist:
+
+			   setattr(strat.indicator1,a,request.POST.get(str(a)+"1"))
+			   print(getattr(strat.indicator1,a))
+			   print("set inside")
+
+			for a in shortfieldlist2:
+			   setattr(strat.indicator2,a,request.POST.get(str(a)+"2"))
+			   print(getattr(strat.indicator2,a))
+
+
+		strat.save()
+		print(strat.id)
+		print("done!!!!!!!!")
+
+		return render(request, "blog/nav.html",{'companies': companies})  
+
+
+
 
 def createstrategy(request,pk):
 	if request.method == 'POST':
 		if request.POST.get('indicator1') and request.POST.get('indicator2') and request.POST.get('comparator') and request.POST.get('name') and request.POST.get('instrument') :
 			strat=Strategy()
-			strat.indicator1= request.POST.get('indicator1')
-			strat.indicator2= request.POST.get('indicator2')
+			
 			strat.comparator= request.POST.get('comparator')
 			strat.name= request.POST.get('name')
 			strat.instrument= request.POST.get('instrument')
+			i1=apps.get_model("blog",request.POST.get('indicator1'))()
+			i1.save()
 
+
+			i2=apps.get_model("blog",request.POST.get('indicator2'))()
+			i2.save()
+			strat.indicator1=i1 
+			strat.indicator2=i2
+
+
+		   
+			strat.task_id = "task_obj.id"
 			strat.save()
+			print(strat.id)
+		  
+			sq=strat.indicator1._meta.get_fields(include_parents=False)
+			print("SQ is ----------"+str(sq))
+			sp=list()
 
-			companies = Companies.objects.all()      
+			for a in sq:
+				a=str(a).split(".")[2]
+				a=a.split("\'")[0]
+				sp.append(a)
+
+
+
+
+
+			sq2=strat.indicator2._meta.get_fields(include_parents=False)
+			sp2=list()
+
+			for a in sq2:
+				a=str(a).split(".")[2]
+				a=a.split("\'")[0]
+				sp2.append(a)
+
+			# indicator=Indicators.create(request.POST.get('indicator1'))
+			# if(request.POST.get('indicator1')=='MovingAverage'):
+			#     indicator.indi.create(request.POST.get('period'),request.POST.get('interval'))
+			# if(request.POST.get('indicator2')=='MovingAverage'):
+			#     indicator.indi.create(request.POST.get('period'),request.POST.get('interval'))
+
+			# indicator.save()
+
+			companies = Companies.objects.all()  
+			indilist=Indicator.__subclasses__() 
+			indicatorl=list()
+			for a in indilist:
+				a=str(a).split(".")[2]
+				a=a.split("\'")[0]
+				indicatorl.append(a)
+			choice=Choices()             
 
 			r = Refreshed(name="Strategy")
 			r.save()
 			print("\nAdded refresh object")
-			return render(request, "blog/nav.html",{'companies': companies})
+			return render(request, "blog/nav2.html",{'companies': companies,"strat":strat.id,"fieldlist1":sp,"fieldlist2":sp2,"indicatorlist":indicatorl,"choice":choice})
 	else:
 		companies = Companies.objects.all()
 		return render(request, "blog/nav.html",{'companies': companies})  

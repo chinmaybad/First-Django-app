@@ -93,7 +93,7 @@ class Indicator(models.Model):
 			from_date += pd.Timedelta(days = -15)
 			data = kite_fetcher.kite.historical_data(instrument_token = instrument, from_date = from_date , to_date = to_date, interval=interval, continuous=0)
 			df =  pd.DataFrame(data)
-		return data
+		return df
 
 
 class Price(Indicator):
@@ -104,26 +104,19 @@ class Volume(Indicator):
 
 #A dummy class for comparision of RSI,etc with a given value
 class Number(Indicator):
-	value = models.CharField(max_length=100, default='50')	
+	value = models.CharField(max_length=100, default='50')
 	
 	def __str__(self):
-		return self.N
+		return self.value
 
 	def evaluate(self, kite_fetcher, instrument):
-		return float(self.N)
+		return float(self.value)
 
 class Moving_Average(Indicator):	
 	ma_type = models.CharField(max_length=100, default='price')		#price or volume
 	period = models.CharField(max_length=100, default='20')
 	interval = models.CharField(max_length=100, default='minute')	
-# · minute
-# · day
-# · 3minute
-# · 5minute
-# · 10minute
-# · 15minute
-# · 30minute
-# · 60minute
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -135,7 +128,7 @@ class Moving_Average(Indicator):
 			return np.mean(df['volume'][-1 * period : ])
 
 	def __str__(self):
-		return "MA | "+ self.ma_type +  + self.period +" x "+ self.interval
+		return "MA | "+ self.ma_type  + self.period +" x "+ self.interval
 		# return "Moving Avg. | "+ self.ma_type +" >> "+ self.period +" x "+ self.interval
 
 
@@ -146,8 +139,6 @@ class Exponential_Moving_Average(Indicator):	#EMA
 	ma_type = models.CharField(max_length=100, default='price')		#price or volume
 	period = models.CharField(max_length=100, default='20')
 	interval = models.CharField(max_length=100, default='minute')	
-	# prev_val = models.CharField(max_length=100, default='0')
-	# last_updated = models.DateTimeField(blank=True, null=True,default=timezone.now)
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -157,7 +148,6 @@ class Exponential_Moving_Average(Indicator):	#EMA
 			data = df['close']
 		else:
 			data = df['volume']
-
 		# long_rolling = data.rolling(window=period).mean()
 		# ema_short = data.ewm(span=20, adjust=False).mean()
 		result = talib.EMA(data, timeperiod=period)
@@ -337,27 +327,92 @@ class Parabolic_SAR(Indicator):	#Moving Average Convergence/Divergence Histogram
 # Triple  :  TEMA = 4
 # Triangular  :  TRIMA = 5
 # Double  :  DEMA = 3
-# Hull
+# Hull : NA
 
 class Stochastic(Indicator):	#Moving Average Convergence/Divergence Histogram
 	interval = models.CharField(max_length=100, default='minute')
+	kd_type = models.CharField(max_length=100, default='%K')		# %K or %D
 	fastk_period = models.CharField(max_length=100, default='10')
 	slowk_period = models.CharField(max_length=100, default='3')
-	slowk_matype = models.CharField(max_length=100, default='0.02')
-	slowd_period = models.CharField(max_length=100, default='0.02')
-	slowd_matype = models.CharField(max_length=100, default='0.02')
+	slowk_matype = models.CharField(max_length=100, default='EMA')
+	slowd_period = models.CharField(max_length=100, default='10')
+	slowd_matype = models.CharField(max_length=100, default='EMA')
 	
 
 	def evaluate(self, kite_fetcher, instrument):
-		df = self.get_samll_data(kite_fetcher=kite_fetcher, instrument=instrument)
-		result = talib.SAR(high=df['high'], low=df['low'], acceleration=int(self.acceleration), maximum=int(self.maximum))
-		return np.round(result.iloc[-1], 2)
+		TMA = talib.MA_Type
+		MA_dict = {'SMA' : TMA.SMA, 'EMA' : TMA.EMA, 'Double' : TMA.DEMA, 'Triple' : TMA.TEMA, 'Triangular' : TMA.TRIMA}
+
+		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		slowk, slowd = talib.STOCH( df['high'], df['low'], df['close'], fastk_period=int(self.fastk_period), slowk_period=int(self.slowk_period),
+		slowk_matype=MA_dict[self.slowk_matype], slowd_period=int(self.slowd_period), slowd_matype=MA_dict[self.slowd_matype] )
+
+		if(self.kd_type == "% K"):
+			return np.round(slowk.iloc[-1], 2)
+		else:
+			return np.round(slowd.iloc[-1], 2)
 
 	def __str__(self):
-		return "Parabolic SAR"
+		return "Stochastic"
 
 
-slowk, slowd = STOCH(high, low, close, fastk_period=5, slowk_period=3, slowk_matype=0, slowd_period=3, slowd_matype=0)
+class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
+	interval = models.CharField(max_length=100, default='10minute')
+	period = models.CharField(max_length=100, default='7')		# %K or %D
+	multiplier = models.CharField(max_length=100, default='3')
+	
+
+	def evaluate(self, kite_fetcher, instrument):	
+		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+# http://www.freebsensetips.com/blog/detail/7/What-is-supertrend-indicator-its-calculation
+# BASIC UPPERBAND  =  (HIGH + LOW) / 2 + Multiplier * ATR
+# BASIC LOWERBAND =  (HIGH + LOW) / 2 - Multiplier * ATR
+
+# FINAL UPPERBAND = IF( (Current BASICUPPERBAND  < Previous FINAL UPPERBAND) and (Previous Close > Previous FINAL UPPERBAND))
+# 	THEN (Current BASIC UPPERBAND) ELSE Previous FINALUPPERBAND)
+
+# FINAL LOWERBAND = IF( (Current BASIC LOWERBAND  > Previous FINAL LOWERBAND) and (Previous Close < Previous FINAL LOWERBAND))
+# 	THEN (Current BASIC LOWERBAND) ELSE Previous FINAL LOWERBAND)
+
+# SUPERTREND = IF(Current Close <= Current FINAL UPPERBAND )
+# 	THEN Current FINAL UPPERBAND
+# 	ELSE Current  FINAL LOWERBAND
+
+		period = int(self.period)
+		multiplier = int(self.multiplier)
+		df['ATR'] = talib.ATR(df['high'], df['low'], df['close'], timeperiod=period)
+
+		df['BUB'] = (df['high'] + df['low'])/2 + multiplier * df['ATR']
+		df['BLB'] = (df['high'] + df['low'])/2 - multiplier * df['ATR']
+		df['FUB'] = df['FLB'] = 0
+
+		df.loc[period, 'FUB'] = df.loc[period, 'BUB']
+		df.loc[period, 'FLB'] = df.loc[period, 'BLB']
+
+		for i in range(period+1, len(df)):
+			
+			if(df.loc[i, 'BUB']< df.loc[i-1, 'FUB']  and   df.loc[i-1, 'close'] > df.loc[i-1, 'FUB']):
+				df.loc[i, 'FUB'] = df.loc[i, 'BUB']
+			else:
+				df.loc[i, 'FUB'] = df.loc[i-1, 'FUB']
+			
+			if(df.loc[i, 'BLB']< df.loc[i-1, 'FLB']  and   df.loc[i-1, 'close'] > df.loc[i-1, 'FLB']):
+				df.loc[i, 'FLB'] = df.loc[i, 'BLB']
+			else:
+				df.loc[i, 'FLB'] = df.loc[i-1, 'FLB']
+			
+		if(df.loc[i, 'close'] <= df.loc[i, 'FUB']):
+			result = df.loc[i, 'FUB']
+		else:
+			result = df.loc[i, 'FLB']
+
+		return np.round(result, 2)
+
+	def __str__(self):
+		return "Supertrend"
+
 
 class Strategy(models.Model):
 	name=models.CharField(max_length=100)
@@ -367,11 +422,21 @@ class Strategy(models.Model):
 	instrument=models.CharField(max_length=100)
 
 	def __str__(self):
-		comp = '  <  '
-		if(int(self.comparator) == 1):
-			comp = '  > '
 
-		return self.name +'('+ self.instrument +') ::  '+str(self.indicator1) + comp + str(self.indicator2)
+		return self.name +'('+ self.instrument +') ::  '+str(self.indicator1) + self.comparator + str(self.indicator2)
 
 
 
+class Choices():
+	interval=list()
+	ma_type=list()
+	kd_type = list()
+	slowk_matype = list()
+	slowd_matype = list()
+
+	def __init__(self):
+		 self.interval = ['minute', 'day', '3minute','5minute','10minute','15minute','30minute','60minute']
+		 self.ma_type=["Price","Volume"]
+		 self.kd_type = ["% K", "% D"]
+		 self.slowk_matype = ['SMA', 'EMA', 'Double', 'Triple', 'Triangular']
+		 self.slowd_matype = ['SMA', 'EMA', 'Double', 'Triple', 'Triangular']
