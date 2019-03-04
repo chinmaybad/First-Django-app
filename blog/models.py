@@ -123,12 +123,12 @@ class Moving_Average(Indicator):
 		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
 
 		if(self.ma_type == 'price'):
-			return np.mean(df['close'][-1 * period : ])
+			return np.round(np.mean(df['close'][-1 * period : ]), 2)
 		else:
-			return np.mean(df['volume'][-1 * period : ])
+			return np.round(np.mean(df['volume'][-1 * period : ]))
 
 	def __str__(self):
-		return "MA | "+ self.ma_type  + self.period +" x "+ self.interval
+		return "MA( "+ self.ma_type +", "  + self.period +", "+ self.interval +")"
 		# return "Moving Avg. | "+ self.ma_type +" >> "+ self.period +" x "+ self.interval
 
 
@@ -154,7 +154,7 @@ class Exponential_Moving_Average(Indicator):	#EMA
 		return np.round(result.iloc[-1] , 2)
 
 	def __str__(self):
-		return "EMA | "+ self.ma_type +  + self.period +" x "+ self.interval
+		return "EMA( "+ self.ma_type +", "  + self.period +" x "+ self.interval +")"
 
 
 
@@ -171,12 +171,17 @@ class RSI(Indicator):
 		delta = df['close'][-1 * (period+1) : ].diff()		#eg. 15 candles for period of 14 to calc. detla
 		up = delta[delta > 0]
 		down = delta[delta<0]
-		rs = np.mean(up) / np.mean(down)
-
-		return np.round(100 -  100/(1+rs), 2)
+		print('up = ', up)
+		print('down = ', down)
+		try:
+			rs = abs( np.mean(up) / np.mean(down) )
+		except:
+			rs = 1
+		print("RS = ", rs)
+		return np.round(100 -  float(100)/(1+rs), 2)
 
 	def __str__(self):
-		return "RSI | "+ self.period +" x "+ self.interval
+		return "RSI("+ self.period +", "+ self.interval +")"
 
 
 class ADX(Indicator):	#Average Directional Movement
@@ -191,7 +196,7 @@ class ADX(Indicator):	#Average Directional Movement
 		return np.round(result.iloc[-1] , 2)
 
 	def __str__(self):
-		return "ADX | " +self.period +" x "+ self.interval		
+		return "ADX("+ self.period +", "+ self.interval +")"	
 
 
 class Aroon_Oscillator(Indicator):	#Uptrend or Downtrend
@@ -206,7 +211,7 @@ class Aroon_Oscillator(Indicator):	#Uptrend or Downtrend
 		return np.round(result.iloc[-1] , 2)
 
 	def __str__(self):
-		return "ADX | " +self.period +" x "+ self.interval
+		return "Aroon_Oscillator("+ self.period +", "+ self.interval +")"	
 
 
 
@@ -228,7 +233,7 @@ class Chaikin_Money_Flow(Indicator):	#Uptrend or Downtrend
 		return np.round(CMF , 4)
 
 	def __str__(self):
-		return "CMF | " +self.period +" x "+ self.interval
+		return "CMF("+ self.period +", "+ self.interval +")"	
 
 
 
@@ -251,7 +256,7 @@ class Chaikin_Volatility(Indicator):	#compares the spread between a security's h
 		return np.round(result , 4)
 
 	def __str__(self):
-		return "CV | " +self.period +" x "+ self.interval
+		return "CV("+ self.period +", "+ self.interval +")"	
 
 
 class MACD(Indicator):	#Moving Average Convergence/Divergence
@@ -268,7 +273,7 @@ class MACD(Indicator):	#Moving Average Convergence/Divergence
 		return np.round(macd.iloc[-1] , 4)
 
 	def __str__(self):
-		return "MACD"
+		return "MACD("+ self.interval +")"	
 
 
 class MACD_Signal(Indicator):	#Moving Average Convergence/Divergence Signal
@@ -285,7 +290,7 @@ class MACD_Signal(Indicator):	#Moving Average Convergence/Divergence Signal
 		return np.round(macdsignal.iloc[-1], 4)
 
 	def __str__(self):
-		return "MACD-signal"
+		return "MACD-signal("+ self.interval +")"	
 
 
 class MACD_Histogram(Indicator):	#Moving Average Convergence/Divergence Histogram
@@ -302,7 +307,7 @@ class MACD_Histogram(Indicator):	#Moving Average Convergence/Divergence Histogra
 		return np.round(macdhist.iloc[-1], 4)
 
 	def __str__(self):
-		return "MACD-histogram"		
+		return "MACD-histogram("+ self.interval +")"		
 
 
 
@@ -312,12 +317,12 @@ class Parabolic_SAR(Indicator):	#Moving Average Convergence/Divergence Histogram
 	interval = models.CharField(max_length=100, default='minute')	
 
 	def evaluate(self, kite_fetcher, instrument):
-		df = self.get_samll_data(kite_fetcher=kite_fetcher, instrument=instrument)
-		result = talib.SAR(high=df['high'], low=df['low'], acceleration=int(self.acceleration), maximum=int(self.maximum))
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		result = talib.SAR(high=df['high'], low=df['low'], acceleration=float(self.acceleration), maximum=float(self.maximum))
 		return np.round(result.iloc[-1], 2)
 
 	def __str__(self):
-		return "Parabolic SAR"
+		return "Parabolic SAR("+ self.interval +")"	
 
 
 #help(talib.MA_Type)
@@ -354,7 +359,7 @@ class Stochastic(Indicator):	#Moving Average Convergence/Divergence Histogram
 			return np.round(slowd.iloc[-1], 2)
 
 	def __str__(self):
-		return "Stochastic"
+		return "Stochastic("+self.interval +")"	
 
 
 class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
@@ -365,6 +370,8 @@ class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
 
 	def evaluate(self, kite_fetcher, instrument):	
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		period = int(self.period)
+		multiplier = int(self.multiplier)
 
 # http://www.freebsensetips.com/blog/detail/7/What-is-supertrend-indicator-its-calculation
 # BASIC UPPERBAND  =  (HIGH + LOW) / 2 + Multiplier * ATR
@@ -380,8 +387,6 @@ class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
 # 	THEN Current FINAL UPPERBAND
 # 	ELSE Current  FINAL LOWERBAND
 
-		period = int(self.period)
-		multiplier = int(self.multiplier)
 		df['ATR'] = talib.ATR(df['high'], df['low'], df['close'], timeperiod=period)
 
 		df['BUB'] = (df['high'] + df['low'])/2 + multiplier * df['ATR']
@@ -411,7 +416,7 @@ class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
 		return np.round(result, 2)
 
 	def __str__(self):
-		return "Supertrend"
+		return "Supertrend("+ self.period +", "+ self.interval +")"	
 
 
 class Strategy(models.Model):
@@ -422,8 +427,8 @@ class Strategy(models.Model):
 	instrument=models.CharField(max_length=100)
 
 	def __str__(self):
-
-		return self.name +'('+ self.instrument +') ::  '+str(self.indicator1) + self.comparator + str(self.indicator2)
+		comp_dict = {'1' : ' > ', '2' :' < ', '3':' Crosses Above ', '4':' Crosses Below '}
+		return self.name +'('+ self.instrument +') ::  '+str(self.indicator1) + comp_dict[self.comparator] + str(self.indicator2)
 
 
 

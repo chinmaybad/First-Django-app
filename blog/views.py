@@ -65,13 +65,16 @@ def updatestrategy(request,pk):
 	if request.method == 'POST':
 		sid=request.POST.get('strat')
 		strat = get_object_or_404(Strategy,pk=sid)
+		strat.indicator1 = strat.indicator1.down_cast()
+		strat.indicator2 = strat.indicator2.down_cast()
+
 		companies = Companies.objects.all()
 		# len1=int(request.POST.get('for1'))
 		# len2=int(request.POST.get('for2'))
 		
-		indi1=apps.get_model("blog",str(strat.indicator1))()
+		indi1=apps.get_model("blog",str(strat.indicator1.__class__.__name__))()
 
-		indi2=apps.get_model("blog",str(strat.indicator2))()
+		indi2=apps.get_model("blog",str(strat.indicator2.__class__.__name__))()
 		print(strat.id)
 
 		fullfieldlist=indi1._meta.get_fields(include_parents=False)
@@ -108,7 +111,7 @@ def updatestrategy(request,pk):
 			   
 				a=str(a).split(".")[2]
 				a=a.split("\'")[0]
-				shortfieldlist.append(a)
+				shortfieldlist2.append(a)
 			i+=1
 	  
 
@@ -128,10 +131,20 @@ def updatestrategy(request,pk):
 			for a in shortfieldlist2:
 			   setattr(strat.indicator2,a,request.POST.get(str(a)+"2"))
 			   print(getattr(strat.indicator2,a))
-
-
+		
+		strat.indicator1.save() 
+		strat.indicator2.save()
 		strat.save()
+
+
 		print(strat.id)
+
+
+		s = Strategy.objects.all().filter(pk = strat.id)
+		s = list(s)[0]
+		print('Strategy created = '+str(s))
+		print('Indicator1 = '+str(s.indicator1.down_cast()))
+		print('Indicator2 = '+str(s.indicator2.down_cast()))
 		print("done!!!!!!!!")
 
 		return render(request, "blog/nav.html",{'companies': companies})  

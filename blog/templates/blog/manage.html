@@ -92,7 +92,7 @@
                 // str += "<tr><td><b>  " +"{{s.name}}"+ "</b></td><td>"+   "<a href=\"{% url 'strat_detail' pk=s.pk %}\"                     >Remove</a>"+  "</td></tr>";
                     
                     var a="{{s.pk}}"
-                    str += "<tr><td><b>  " +"{{s.name}}"+ "</b></td><td>"+        "<button onclick=\"myFunction("+a+")\"                     >Remove</a>"+  "</td></tr>";
+                    str += "<tr><td><b>  " +"{{s}}"+ "</b></td><td>"+        "<button onclick=\"myFunction("+a+")\"                     >Remove</a>"+  "</td></tr>";
             {% endfor %}
             document.getElementById("demo1").innerHTML = "<table class=\"table\""+">" + str + "</table>";
                     

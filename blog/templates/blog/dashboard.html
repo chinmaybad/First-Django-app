@@ -38,6 +38,11 @@
 				 {
 				 	margin-left: 10px;
 				 }
+				 .tab1 th{
+				 	font-weight: bold;
+				 	
+				 	
+				 }
         </style>
    </head>
 		
@@ -66,10 +71,11 @@
 	{% endfor %} -->
 
 
-	
+	<div class="tab1">
 	
 	<table id="my_table" class="table">
 	</table>
+	</div>
 
 	<a  href="{% url 'revoke' task_id %}">reset </a>
 	</div>
@@ -94,7 +100,7 @@
 
 					for(var key1 in data){
 						if(data[key1]['status'] == 'True'){
-							trueStr += "<tr bgcolor=\"#00FF00\"><th>"+key1+"</th>";
+							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
 							for(key2 in data[key1]){
 								trueStr += "<td>" + data[key1][key2] +"</td>";
 							}
@@ -110,7 +116,7 @@
 						
 					}
 
-					document.getElementById("my_table").innerHTML = "<table class=\"table\">" + str + trueStr + falseStr +"</table>";
+					document.getElementById("my_table").innerHTML = "<table class=\"table\" width=\"100%\" cellspacing=\"0\">" + str + trueStr + falseStr +"</table>";
 				});
 			});		
 		}

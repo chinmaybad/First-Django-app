@@ -9,6 +9,7 @@ from threading import Timer
 from .models import Strategy, Refreshed
 from .indicators import KiteFetcher
 import os
+import numpy as np
 
 class Work(object):
 
@@ -35,7 +36,7 @@ class Work(object):
 			t = int(s.instrument)
 			self.tokens.append(t)
 			self.global_data[t] = dict.fromkeys(['price', 'volume'])
-			self.strat_data[s.pk] = dict({'status' : False})
+			self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0})
 			s.indicator1 = s.indicator1.down_cast()
 			s.indicator2 = s.indicator2.down_cast()
 
@@ -93,7 +94,7 @@ class Work(object):
 
 	def update_indicators(self, strats_to_update):
 		self.min_count += 1
-		t = Timer(45, self.update_indicators)		#45 sec timer equivalent to 1 minute with code execution
+		t = Timer(45, self.update_indicators, [strats_to_update])		#45 sec timer equivalent to 1 minute with code execution
 		t.start()
 
 		for s in strats_to_update:
@@ -162,8 +163,10 @@ class Work(object):
 
 				strategy_meta[str(s)] = {
 					'status' : str(self.strat_data[s.pk]['status']),
-					'price' : self.global_data[t]['price'],
-					'volume' : self.global_data[t]['volume'],
+					# 'price' : str(np.round(self.global_data[t]['price'], 4)),
+					# 'volume' : str(np.round(self.global_data[t]['volume']) ),
+					'price' : str(self.global_data[t]['price']),
+					'volume' : str(self.global_data[t]['volume']) ,
 					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "("+ str(s.indicator1) +")" ,
 					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "("+ str(s.indicator2) +")" 
 				}
