@@ -172,7 +172,7 @@
         <div id="form1"> 
           <form action="" method="POST">
             {% csrf_token %}
-            <h1>Indicator 1:</h1><br>
+            <h1>Indicator 1: {{strat_obj.indicator1.name}}</h1><br>
 
             {% for attr in fieldlist1 %}
 
@@ -207,7 +207,7 @@
             <input type="hidden" name="for1" value={{fieldlist1|length}} />
             <p>{{forloop.counter}}</p>
             <br>
-            <h1>Indicator 2:</h1><br>
+            <h1>Indicator 2: {{strat_obj.indicator2.name}}</h1><br>
 
             {% for attr in fieldlist2 %}
           

@@ -10,17 +10,17 @@ from .models import Strategy, Refreshed
 from .indicators import KiteFetcher
 import os
 import numpy as np
+import blog.extras.access_token as AT
 
 class Work(object):
 
 	def __init__(self, task):
 		self.task = task
 		print('MY_INIT METHOD CALLED '+str(self.task.request.id))		
-		path = os.getcwd() + '/blog/extras/task.csv'
-		df = pd.read_csv(path, index_col=False)		
-		df['task_id'] = self.task.request.id
-		self.access_token = str(df['access_token'][0])
-		df.to_csv(path, index=False)
+		
+		self.time_stamp = pd.Timestamp('today').minute		#for maintaining recent candle's OHLC
+		self.access_token = AT.get_access_token()
+		AT.set_task_id(self.task.request.id)
 
 		self.strat_list = Strategy.objects.all()		
 		self.tokens = list()	
@@ -28,14 +28,14 @@ class Work(object):
 		self.strat_data = dict()		#indicator 1 & 2 , status, etc
 		self.tick_count, self.min_count = 1, 0
 
-		self.time_map = {'minute' : 1, 'day' : 30, '3minute' : 2, '5minute' : 3, '10minute' : 5, '15minute' : 7, '30minute' : 10 , '60minute' : 15}
+		self.time_map = {'minute' : 1, 'day' : 13, '3minute' : 1, '5minute' : 1, '10minute' : 1, '15minute' : 2, '30minute' : 3 , '60minute' : 4}
 
 		
 		print('###BLOCK 1')
 		for s in self.strat_list:
 			t = int(s.instrument)
 			self.tokens.append(t)
-			self.global_data[t] = dict.fromkeys(['price', 'volume'])
+			self.global_data[t] = dict({'price':0, 'volume':0})		#'price' == 'close'
 			self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0})
 			s.indicator1 = s.indicator1.down_cast()
 			s.indicator2 = s.indicator2.down_cast()
@@ -82,29 +82,29 @@ class Work(object):
 			if(s not in old_strat_list):
 				t = int(s.instrument)
 				if(t not in self.global_data.keys()):
-					self.global_data[t] = dict.fromkeys(['price','volume'])
+					self.global_data[t] = dict({'price':0, 'volume':0})
 
-				self.strat_data[s.pk] = dict({'status' : False})
+				self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0})
 				strats_to_update.append(s)
 
-		self.update_indicators(strats_to_update)
+		self.update_indicators(strats_to_update, force=True)
 		print("Strategies updated successfully")
 
 
 
-	def update_indicators(self, strats_to_update):
-		self.min_count += 1
-		t = Timer(45, self.update_indicators, [strats_to_update])		#45 sec timer equivalent to 1 minute with code execution
+	def update_indicators(self, strats_to_update, force=False):		
+		t = Timer(10, self.update_indicators, [strats_to_update])		#45 sec timer equivalent to 1 minute with code execution
 		t.start()
 
 		for s in strats_to_update:
 			if(s.indicator1.name not in ['price', 'volume']):
-				if(s.indicator1.name == 'number' or self.min_count % self.time_map[s.indicator1.interval]  ==  0):
+				if(s.indicator1.name == 'number' or force or self.min_count % self.time_map[s.indicator1.interval]  ==  0):
 					self.strat_data[s.pk]['indicator1'] = s.indicator1.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))
 
 			if(s.indicator2.name not in ['price', 'volume']):
-				if(s.indicator2.name == 'number' or self.min_count % self.time_map[s.indicator2.interval]  ==  0):
+				if(s.indicator2.name == 'number' or force or self.min_count % self.time_map[s.indicator2.interval]  ==  0):
 					self.strat_data[s.pk]['indicator2'] = s.indicator2.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))		
+		self.min_count += 1
 
 
 	def strategy_status(self, s):
@@ -149,11 +149,26 @@ class Work(object):
 						  
 		def on_ticks(ws, ticks):
 			print('\n______________________________ON TICKS_____________________________\n')
-			# self.tick_count += 1
+			
+			# if(not self.time_stamp == pd.Timestamp('today').minute):
+			# 	for k in self.global_data.keys():
+			# 		self.global_data[k]['open'] = self.global_data[k]['price']
+			# 		self.global_data[k]['high'] = 0
+			# 		self.global_data[k]['low'] = 999999
+			# 		self.time_stamp = pd.Timestamp('today').minute
+
 			for i in ticks:		
 				t = i['instrument_token']
 				self.global_data[t]['price'] = i['last_price']
-				self.global_data[t]['volume'] = i['volume']
+				self.global_data[t]['volume'] = i['volume']				
+
+				# if(self.global_data[t]['high'] < i['last_price']):
+				# 	self.global_data[t]['high'] = i['last_price']
+
+				# if(self.global_data[t]['low'] > i['last_price']):
+				# 	self.global_data[t]['low'] = i['last_price']
+
+
 
 			strategy_meta = dict()
 			for s in self.strat_list:

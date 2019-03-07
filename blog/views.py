@@ -11,6 +11,7 @@ import logging
 import pandas as pd
 import os
 from django.apps import apps
+import blog.extras.access_token as AT
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,7 @@ def post_detail(request, pk):
 def clist(request):
 	companies = Companies.objects.all()
 
-	print('reading csv in NAV | clist')
-	path = os.getcwd() + '/blog/extras/task.csv'
-	df = pd.read_csv(path, index_col=False)		
-	task_id = str(df['task_id'][0])
+	task_id = AT.get_task_id()
 
 	result = AsyncResult(task_id)
 	print('State = ' + str(result.state))
@@ -136,6 +134,10 @@ def updatestrategy(request,pk):
 		strat.indicator2.save()
 		strat.save()
 
+		r = Refreshed(name="Strategy")
+		r.save()
+		print("\nAdded refresh object")
+
 
 		print(strat.id)
 
@@ -212,11 +214,8 @@ def createstrategy(request,pk):
 				a=a.split("\'")[0]
 				indicatorl.append(a)
 			choice=Choices()             
-
-			r = Refreshed(name="Strategy")
-			r.save()
-			print("\nAdded refresh object")
-			return render(request, "blog/nav2.html",{'companies': companies,"strat":strat.id,"fieldlist1":sp,"fieldlist2":sp2,"indicatorlist":indicatorl,"choice":choice})
+			
+			return render(request, "blog/nav2.html",{'companies': companies,"strat":strat.id,"fieldlist1":sp,"fieldlist2":sp2,"indicatorlist":indicatorl,"choice":choice, "strat_obj" : strat})
 	else:
 		companies = Companies.objects.all()
 		return render(request, "blog/nav.html",{'companies': companies})  
@@ -226,10 +225,7 @@ def display_dashboard(request):
 
 	strat_list = Strategy.objects.all()
 
-	print('reading csv')
-	path = os.getcwd() + '/blog/extras/task.csv'
-	df = pd.read_csv(path, index_col=False)		
-	task_id = str(df['task_id'][0])
+	task_id = AT.get_task_id()
 
 	result = AsyncResult(task_id)
 	print('State = ' + str(result.state))
@@ -248,10 +244,7 @@ def revoke(request,task_id):
 	strat_list = Strategy.objects.all()
 	task_obj = do_work.apply_async()
 
-	path = os.getcwd() + '/blog/extras/task.csv'
-	df = pd.read_csv(path, index_col=False)		
-	df['task_id'] = task_obj.id
-	df.to_csv(path, index=False)
+	AT.set_task_id(task_obj.id)
 
 	return redirect('/dashboard',{"task_id":task_obj.id,"strat_list":strat_list})
 
@@ -280,7 +273,9 @@ def get_progress(request, task_id):
 
 
 def manage(request):
-	strat_list = Strategy.objects.all()
+	from django.db.models import Q
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+
 	return render(request, 'blog/manage.html',{"strat_list":strat_list})
 
 def strat_detail(request,pk):
@@ -294,4 +289,19 @@ def strat_detail(request,pk):
 	r = Refreshed(name="Strategy")
 	r.save()
 	print("\nAdded refresh object")
+	return redirect('manage')
+
+
+def delete_all(request):
+	from django.db.models import Q
+
+	for strat in Strategy.objects.filter(~Q(name = "DO_NOT_DELETE")):
+		strat.indicator1.delete()
+		strat.indicator2.delete()
+		strat.delete()
+
+	r = Refreshed(name="Strategy")
+	r.save()
+	print("\nAdded refresh object")
+
 	return redirect('manage')

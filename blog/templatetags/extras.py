@@ -8,4 +8,4 @@ def get_attr(obj,arg):
 @register.filter(name="hasattribute")
 def hasattribute(obj,arg):
 	return hasattr(obj,arg)
-
+	
