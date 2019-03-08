@@ -93,7 +93,7 @@ class Work(object):
 
 
 	def update_indicators(self, strats_to_update, force=False):		
-		t = Timer(10, self.update_indicators, [strats_to_update])		#45 sec timer equivalent to 1 minute with code execution
+		t = Timer(np.round(len(strats_to_update)/3 +1), self.update_indicators, [strats_to_update])		#45 sec timer equivalent to 1 minute with code execution
 		t.start()
 
 		for s in strats_to_update:
@@ -182,8 +182,8 @@ class Work(object):
 					# 'volume' : str(np.round(self.global_data[t]['volume']) ),
 					'price' : str(self.global_data[t]['price']),
 					'volume' : str(self.global_data[t]['volume']) ,
-					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "("+ str(s.indicator1) +")" ,
-					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "("+ str(s.indicator2) +")" 
+					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "<br>"+ str(s.indicator1) +"" ,
+					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "<br>"+ str(s.indicator2) +"" 
 				}
 
 			self.task.update_state(state='PROGRESS', meta=strategy_meta)

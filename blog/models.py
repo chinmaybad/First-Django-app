@@ -234,8 +234,8 @@ class Chaikin_Money_Flow(Indicator):	#Uptrend or Downtrend
 # Money Flow Volume = Money Flow Multiplier x Volume for the Period
 # 20-period CMF = 20-period Sum of Money Flow Volume / 20 period Sum of Volume
 		df = df.iloc[-period:]
-		df['MFM'] = (2*df['close'] - df['high'] - df['low']) / (df['high'] - df['low'])
-		df['MFV'] = df['MFM'] * df['volume']		
+		df['MFM'] = (2*df.loc[:, 'close'] - df.loc[:, 'high'] - df.loc[:, 'low']) / (df.loc[:, 'high'] - df.loc[:, 'low'])
+		df['MFV'] = df.loc[:, 'MFM'] * df.loc[:, 'volume']		
 		CMF = np.sum(df['MFV'])/np.sum(df['volume'])		
 		return np.round(CMF , 4)
 
@@ -257,13 +257,10 @@ class Chaikin_Volatility(Indicator):	#compares the spread between a security's h
 # Next, calculate the percentage change in the moving average over a further period (normally 10 days):
 # ( EMA [H-L] - EMA [H-L 10 days ago] ) / EMA [ H-L 10 days ago] * 100
 		
-		# df['HL'] = df['high'] - df['low']
-		# HL_EMA = talib.EMA ( df['HL'] , timeperiod=period)
-		# result =  (HL_EMA.iloc[-1] / HL_EMA.iloc[-1*(period+1)]  - 1) * 100
-		# return np.round(result , 4)
-		import blog.extra_indicators as extras 
-		result = extras.chaikin_volatility(df, ema_periods=int(self.period), change_periods=int(self.rate_of_change), high_col='high', low_col='low', close_col='close')
-		return np.round(result['chaikin_volatility'].iloc[-1] , 4)
+		df['HL'] = df['high'] - df['low']
+		HL_EMA = talib.EMA ( df['HL'] , timeperiod=int(self.period))
+		result =  (HL_EMA.iloc[-1] / HL_EMA.iloc[-1*(int(self.rate_of_change)+1)]  - 1) * 100
+		return np.round(result , 4)
 
 	def __str__(self):
 		return "CV("+ self.period +", "+ self.rate_of_change +", "+ self.interval +")"			
@@ -316,7 +313,7 @@ class MACD_Signal(Indicator):	#Moving Average Convergence/Divergence Signal
 		return np.round(macdsignal.iloc[-1], 4)
 
 	def __str__(self):
-		return "MACD("+ self.fastperiod +", "+ self.slowperiod +", "+ self.signalperiod +", "+ self.interval +")"
+		return "MACD-signal("+ self.fastperiod +", "+ self.slowperiod +", "+ self.signalperiod +", "+ self.interval +")"
 
 
 class MACD_Histogram(Indicator):	#Moving Average Convergence/Divergence Histogram
@@ -333,7 +330,7 @@ class MACD_Histogram(Indicator):	#Moving Average Convergence/Divergence Histogra
 		return np.round(macdhist.iloc[-1], 4)
 
 	def __str__(self):
-		return "MACD("+ self.fastperiod +", "+ self.slowperiod +", "+ self.signalperiod +", "+ self.interval +")"	
+		return "MACD-histogram("+ self.fastperiod +", "+ self.slowperiod +", "+ self.signalperiod +", "+ self.interval +")"	
 
 
 
@@ -348,7 +345,7 @@ class Parabolic_SAR(Indicator):	#Moving Average Convergence/Divergence Histogram
 		return np.round(result.iloc[-1], 2)
 
 	def __str__(self):
-		return "MACD("+ self.acceleration +", "+ self.maximum +", "+ self.interval +")"
+		return "P-SAR("+ self.acceleration +", "+ self.maximum +", "+ self.interval +")"
 
 
 #help(talib.MA_Type)
@@ -398,65 +395,38 @@ class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
 		period = int(self.period)
 		multiplier = int(self.multiplier)
+		
+		atr = 'ATR'
+		st, stx = 'supertrend', 'stx'
+		df['ATR'] = talib.ATR(df['high'], df['low'], df['close'], timeperiod=period)
+			# Compute basic upper and lower bands
+		df['basic_ub'] = (df.loc[:, 'high']+ df.loc[:, 'low']) / 2 + multiplier * df[atr]
+		df['basic_lb'] = (df.loc[:, 'high']+ df.loc[:, 'low']) / 2 - multiplier * df[atr]
 
-# http://www.freebsensetips.com/blog/detail/7/What-is-supertrend-indicator-its-calculation
-# BASIC UPPERBAND  =  (HIGH + LOW) / 2 + Multiplier * ATR
-# BASIC LOWERBAND =  (HIGH + LOW) / 2 - Multiplier * ATR
+		# Compute final upper and lower bands
+		df['final_ub'] = 0.00
+		df['final_lb'] = 0.00
+		for i in range(period, len(df)):
+			df['final_ub'].iat[i] = df['basic_ub'].iat[i] if df['basic_ub'].iat[i] < df['final_ub'].iat[i - 1] or df['close'].iat[i - 1] > df['final_ub'].iat[i - 1] else df['final_ub'].iat[i - 1]
+			df['final_lb'].iat[i] = df['basic_lb'].iat[i] if df['basic_lb'].iat[i] > df['final_lb'].iat[i - 1] or df['close'].iat[i - 1] < df['final_lb'].iat[i - 1] else df['final_lb'].iat[i - 1]
+		   
+		# Set the Supertrend value
+		df[st] = 0.00
+		for i in range(period, len(df)):
+			df[st].iat[i] = df['final_ub'].iat[i] if df[st].iat[i - 1] == df['final_ub'].iat[i - 1] and df['close'].iat[i] <= df['final_ub'].iat[i] else \
+							df['final_lb'].iat[i] if df[st].iat[i - 1] == df['final_ub'].iat[i - 1] and df['close'].iat[i] >  df['final_ub'].iat[i] else \
+							df['final_lb'].iat[i] if df[st].iat[i - 1] == df['final_lb'].iat[i - 1] and df['close'].iat[i] >= df['final_lb'].iat[i] else \
+							df['final_ub'].iat[i] if df[st].iat[i - 1] == df['final_lb'].iat[i - 1] and df['close'].iat[i] <  df['final_lb'].iat[i] else 0.00 
+				 
+	# Mark the trend direction up/down
+		df[stx] = np.where((df[st] > 0.00), np.where((df['close'] < df[st]), 'down',  'up'), np.NaN)
 
-# FINAL UPPERBAND = IF( (Current BASICUPPERBAND  < Previous FINAL UPPERBAND) and (Previous Close > Previous FINAL UPPERBAND))
-# 	THEN (Current BASIC UPPERBAND) ELSE Previous FINALUPPERBAND)
+	# Remove basic and final bands from the columns
+		df.drop(['basic_ub', 'basic_lb', 'final_ub', 'final_lb'], inplace=True, axis=1)
+	
+		df.fillna(0, inplace=True)
 
-# FINAL LOWERBAND = IF( (Current BASIC LOWERBAND  > Previous FINAL LOWERBAND) and (Previous Close < Previous FINAL LOWERBAND))
-# 	THEN (Current BASIC LOWERBAND) ELSE Previous FINAL LOWERBAND)
-
-# SUPERTREND = IF(Current Close <= Current FINAL UPPERBAND )
-# 	THEN Current FINAL UPPERBAND
-# 	ELSE Current  FINAL LOWERBAND
-
-		df.columns = ['Close', 'Date', 'High', 'Low', 'Open', 'Volume']
-		#df is the dataframe, n is the period, f is the factor; f=3, n=7 are commonly used.
-		f, n = multiplier, period    
-		df['H-L']=abs(df['High']-df['Low'])
-		df['H-PC']=abs(df['High']-df['Close'].shift(1))
-		df['L-PC']=abs(df['Low']-df['Close'].shift(1))
-		df['TR']=df[['H-L','H-PC','L-PC']].max(axis=1)
-		df['ATR']=np.nan
-		df.ix[n-1,'ATR']=df['TR'][:n-1].mean() #.ix is deprecated from pandas verion- 0.19
-		for i in range(n,len(df)):
-			df['ATR'][i]=(df['ATR'][i-1]*(n-1)+ df['TR'][i])/n
-
-		#Calculation of SuperTrend
-		df['Upper Basic']=(df['High']+df['Low'])/2+(f*df['ATR'])
-		df['Lower Basic']=(df['High']+df['Low'])/2-(f*df['ATR'])
-		df['Upper Band']=df['Upper Basic']
-		df['Lower Band']=df['Lower Basic']
-		for i in range(n,len(df)):
-			if df['Close'][i-1]<=df['Upper Band'][i-1]:
-				df['Upper Band'][i]=min(df['Upper Basic'][i],df['Upper Band'][i-1])
-			else:
-				df['Upper Band'][i]=df['Upper Basic'][i]    
-		for i in range(n,len(df)):
-			if df['Close'][i-1]>=df['Lower Band'][i-1]:
-				df['Lower Band'][i]=max(df['Lower Basic'][i],df['Lower Band'][i-1])
-			else:
-				df['Lower Band'][i]=df['Lower Basic'][i]   
-		df['SuperTrend']=np.nan
-		for i in df['SuperTrend']:
-			if df['Close'][n-1]<=df['Upper Band'][n-1]:
-				df['SuperTrend'][n-1]=df['Upper Band'][n-1]
-			elif df['Close'][n-1]>df['Upper Band'][i]:
-				df['SuperTrend'][n-1]=df['Lower Band'][n-1]
-		for i in range(n,len(df)):
-			if df['SuperTrend'][i-1]==df['Upper Band'][i-1] and df['Close'][i]<=df['Upper Band'][i]:
-				df['SuperTrend'][i]=df['Upper Band'][i]
-			elif  df['SuperTrend'][i-1]==df['Upper Band'][i-1] and df['Close'][i]>=df['Upper Band'][i]:
-				df['SuperTrend'][i]=df['Lower Band'][i]
-			elif df['SuperTrend'][i-1]==df['Lower Band'][i-1] and df['Close'][i]>=df['Lower Band'][i]:
-				df['SuperTrend'][i]=df['Lower Band'][i]
-			elif df['SuperTrend'][i-1]==df['Lower Band'][i-1] and df['Close'][i]<=df['Lower Band'][i]:
-				df['SuperTrend'][i]=df['Upper Band'][i]
-
-		return np.round(df['SuperTrend'].iloc[-1], 2)	
+		return np.round(df['supertrend'].iloc[-1], 2)
 
 	def __str__(self):
 		return "Supertrend("+ self.interval +", "+ self.period +", " + self.multiplier +")"	
@@ -468,7 +438,7 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 	standard_deviation = models.CharField(max_length=100, default='2')
 	field = models.CharField(max_length=100, default='close')
 	interval = models.CharField(max_length=100, default='minute')	
-	band_type = models.CharField(max_length=100, default='minute')	
+	band_type = models.CharField(max_length=100, default='middle')	
 
 	def evaluate(self, kite_fetcher, instrument):
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
@@ -481,7 +451,7 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 		s = df[close_col].iloc[index - period: index]		
 		middle_band = df.at[index, 'bol_bands_middle']
 		if(self.band_type == 'middle'):
-			return middle_band
+			return np.round(middle_band, 2)
 
 		sums = 0
 		for e in s:
@@ -489,9 +459,9 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 
 		std = np.sqrt(sums / period)
 		if(self.band_type == 'upper'):
-			return middle_band + (d * std)
+			return np.round(middle_band + (d * std), 2)
 		else:
-			return middle_band - (d * std)
+			return np.round(middle_band - (d * std), 2)
 
 	def __str__(self):
 		return "BBAND(" + self.band_type +", "+ self.period +", "+ self.interval +")"
