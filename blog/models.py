@@ -128,6 +128,22 @@ class Number(Indicator):
 	def evaluate(self, kite_fetcher, instrument):
 		return float(self.value)
 
+class Standard_Deviation(Indicator):	
+	period = models.CharField(max_length=100, default='10')
+	interval = models.CharField(max_length=100, default='minute')
+	field = models.CharField(max_length=100, default='close')
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		return np.std(df[field][-1 * period : ], 4)
+
+	def __str__(self):
+		return "std( "+ self.period +", "+ self.interval +", "+ self.field +")"
+		# return "Moving Avg. | "+ self.ma_type +" >> "+ self.period +" x "+ self.interval
+
 class Moving_Average(Indicator):	
 	ma_type = models.CharField(max_length=100, default='price')		#price or volume
 	period = models.CharField(max_length=100, default='10')
@@ -435,7 +451,7 @@ class Supertrend(Indicator):	#Moving Average Convergence/Divergence Histogram
 
 class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogram
 	period = models.CharField(max_length=100, default='14')
-	standard_deviation = models.CharField(max_length=100, default='2')
+	std = models.CharField(max_length=100, default='2')
 	field = models.CharField(max_length=100, default='close')
 	interval = models.CharField(max_length=100, default='minute')	
 	band_type = models.CharField(max_length=100, default='middle')	
@@ -443,7 +459,7 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 	def evaluate(self, kite_fetcher, instrument):
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
 		close_col = self.field
-		d = int(self.standard_deviation)
+		d = int(self.std)
 		period = int(self.period)
 		df['bol_bands_middle'] = df[close_col].ewm(ignore_na=False, min_periods=0, com=period, adjust=True).mean()
 
@@ -464,8 +480,92 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 			return np.round(middle_band - (d * std), 2)
 
 	def __str__(self):
-		return "BBAND(" + self.band_type +", "+ self.period +", "+ self.interval +")"
+		return "BBAND(" + self.band_type +", "+ self.period +", "+ self.interval +", "+ self.std + ")"
 
+
+class Money_Flow_Index(Indicator):	
+	period = models.CharField(max_length=100, default='10')
+	interval = models.CharField(max_length=100, default='minute')	
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		result = talib.MFI(high = df['high'], low = df['low'], close = df['close'], volume = df['volume'], timeperiod = period)
+		return np.round(result, 4)
+
+	def __str__(self):
+		return "MFI( "+ self.period +", "+ self.interval +")"
+
+class VWAP(Indicator):	
+	interval = models.CharField(max_length=100, default='minute')	
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		to_date = pd.Timestamp('today')
+		from_date = pd.Timestamp(to_date.date())
+
+		data = kite_fetcher.kite.historical_data(instrument_token = instrument, from_date = from_date , to_date = to_date, interval=self.interval, continuous=0)
+		df =  pd.DataFrame(data)
+
+		df['mean'] = (df.loc[: , 'low'] + df[:, 'high'] + df[:, 'close']) /3
+		df['mul'] = df[:, 'mean'] * df[:, 'volume']
+		try:
+			result = np.sum(df.loc[:, 'mul']) / np.sum(df.loc[:, 'vol'])
+		except:
+			result = 0
+		return np.round(result, 4)
+
+	def __str__(self):
+		return "VWAP( "+ self.interval +")"
+
+class ATR(Indicator):	
+	period = models.CharField(max_length=100, default='10')
+	interval = models.CharField(max_length=100, default='minute')	
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		result = talib.ATR(high = df['high'], low = df['low'], close = df['close'], timeperiod = period)
+		return np.round(result, 4)
+
+	def __str__(self):
+		return "ATR( "+ self.period +", "+ self.interval +")"
+
+class Momentum_Indicator(Indicator):	
+	period = models.CharField(max_length=100, default='14')
+	interval = models.CharField(max_length=100, default='minute')	
+# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		result = talib.MOM(close = df['close'], timeperiod = period)
+		return np.round(result, 4)
+
+	def __str__(self):
+		return "Momentum( "+ self.period +", "+ self.interval +")"
+
+
+# class High_Low_Band(Indicator):	
+# 	period = models.CharField(max_length=100, default='14')
+# 	interval = models.CharField(max_length=100, default='minute')	
+# # · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+
+# 	def evaluate(self, kite_fetcher, instrument):
+# 		period = int(self.period)
+# 		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+# 		result = talib.MOM(close = df['close'], timeperiod = period)
+# 		return np.round(result, 4)
+
+# 	def __str__(self):
+# 		return "Momentum( "+ self.period +", "+ self.interval +")"
 
 class Strategy(models.Model):
 	name=models.CharField(max_length=100)

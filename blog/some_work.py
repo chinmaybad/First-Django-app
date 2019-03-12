@@ -36,7 +36,7 @@ class Work(object):
 			t = int(s.instrument)
 			self.tokens.append(t)
 			self.global_data[t] = dict({'price':0, 'volume':0})		#'price' == 'close'
-			self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0})
+			self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0, 'timestamp':pd.Timestamp('today')})
 			s.indicator1 = s.indicator1.down_cast()
 			s.indicator2 = s.indicator2.down_cast()
 
@@ -84,7 +84,7 @@ class Work(object):
 				if(t not in self.global_data.keys()):
 					self.global_data[t] = dict({'price':0, 'volume':0})
 
-				self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0})
+				self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0, 'timestamp':pd.Timestamp('today')})
 				strats_to_update.append(s)
 
 		self.update_indicators(strats_to_update, force=True)
@@ -116,24 +116,31 @@ class Work(object):
 			self.strat_data[s.pk]['indicator2'] = self.global_data[int(s.instrument)][s.indicator2.name]
 		indicator2 = self.strat_data[s.pk]['indicator2']
 
+		prev = self.strat_data[s.pk]['status']
+		ret = False
+
 		c = int(s.comparator)
 		if(c == 1):		#greater than
 			if(indicator1 > indicator2):
-				return True
+				ret = True
 
 		elif(c == 2):	#less than
 			if(indicator1 < indicator2):
-				return True
+				ret = True
 
 		elif(c == 3):	#crosses above
-			if(self.strat_data[s.pk]['status']==False and  indicator1 > indicator2):
-				return True
+			if(prev==False and  indicator1 > indicator2):
+				ret = True
 
 		elif(c == 4):	#crosses below
-			if(self.strat_data[s.pk]['status']==False and  indicator1 < indicator2):
-				return True
+			if(prev==False and  indicator1 < indicator2):
+				ret = True
 		
-		return False
+		if(prev == True):
+			return ret, self.strat_data[s.pk]['timestamp']
+		else:
+			return ret, pd.Timestamp('today')
+
 
 
 	def run(self):      
@@ -178,6 +185,7 @@ class Work(object):
 
 				strategy_meta[str(s)] = {
 					'status' : str(self.strat_data[s.pk]['status']),
+					'timestamp' : self.strat_data[s.pk]['timestamp'],
 					# 'price' : str(np.round(self.global_data[t]['price'], 4)),
 					# 'volume' : str(np.round(self.global_data[t]['volume']) ),
 					'price' : str(self.global_data[t]['price']),
@@ -185,6 +193,12 @@ class Work(object):
 					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "<br>"+ str(s.indicator1) +"" ,
 					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "<br>"+ str(s.indicator2) +"" 
 				}
+
+
+			df = pd.DataFrame(strategy_meta)
+			new_columns = df.columns[(df.ix['timestamp'] ).argsort()]
+			df = df[new_columns[::-1]]
+			strategy_meta = df.to_dict()
 
 			self.task.update_state(state='PROGRESS', meta=strategy_meta)
 			print(strategy_meta)

@@ -16,11 +16,13 @@
 		<style>
 			 body {
 					font-family: Arial, Helvetica, sans-serif;
+					background-color: #f0f0f0;
 	
 				  }
 				* {
 				  box-sizing: border-box;
 				  font-size: 18px;
+
 				}
 				a{
 					color: #000000;
@@ -62,9 +64,11 @@
 
 				 }
 				 .tab1 th{
-					font-weight: bold;
-					
-					
+					font-weight: bold;										
+				 }
+				 #my_table{
+				 	/*width: 1400px;*/
+				 	background-color: #f0f0f0;
 				 }
 /*				 #upper{
 				 	display: inline-block;
@@ -144,7 +148,9 @@
 					for(var key1 in data){
 						str += "<thead class=\"thead-dark\"><tr><th>Strategy</th>";
 						for(key2 in data[key1]){
-							str += "<th>" + key2 +"</th>";
+							if(key2 != 'status'){
+								str += "<th>" + key2 +"</th>";
+							}
 						}
 						str += "</tr></thead>";
 						break;
@@ -160,17 +166,19 @@
 						if(data[key1]['status'] == 'True'){
 							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
 							for(key2 in data[key1]){
-								trueStr += "<td>" + data[key1][key2] +"</td>";
+								if(key2 != 'status'){
+									trueStr += "<td>" + data[key1][key2] +"</td>";
+								}
 							}
 							trueStr += "</tr>";
 						}
-						else{
-							falseStr += "<tr><th>"+key1+"</th>";
-							for(key2 in data[key1]){
-								falseStr += "<td>" + data[key1][key2] +"</td>";
-							}
-							falseStr += "</tr>";
-						}
+						// else{
+						// 	falseStr += "<tr><th>"+key1+"</th>";
+						// 	for(key2 in data[key1]){
+						// 		falseStr += "<td>" + data[key1][key2] +"</td>";
+						// 	}
+						// 	falseStr += "</tr>";
+						// }
 						
 					}
 
