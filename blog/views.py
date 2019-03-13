@@ -16,6 +16,11 @@ import blog.extras.access_token as AT
 logger = logging.getLogger(__name__)
 
 
+
+instrumentlist=list()
+strategyids=list()
+
+
 def post_list(request):
 	posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
 	return render(request, 'blog/post_lists.html', {'posts': posts})
@@ -47,8 +52,12 @@ def clist(request):
 	return render(request, 'blog/nav.html', {'companies': companies,"indicatorlist":indicatorl})
 
 def clist_detail(request,pk):
+	global instrumentlist
+
+
 	companies = Companies.objects.all()
 	comp = get_object_or_404(Companies,pk=pk)
+	instrumentlist.append(comp.token)
 	indilist=Indicator.__subclasses__()   
 	indicatorl=list()
 	for a in indilist:
@@ -56,98 +65,119 @@ def clist_detail(request,pk):
 		a=a.split("\'")[0]
 		indicatorl.append(a) 
 
-	return render(request, 'blog/nav.html', {'companies': companies,'comp':comp,"indicatorlist":indicatorl})
+	return render(request, 'blog/nav.html', {'companies': companies,'comp':comp,"indicatorlist":indicatorl,"instrumentlist":str(instrumentlist)})
+
+
+def clear(request):
+
+	print("clear called")
+	companies = Companies.objects.all()
+
+	global instrumentlist
+	instrumentlist.clear()
+	indilist=Indicator.__subclasses__()   
+	indicatorl=list()
+	for a in indilist:
+		a=str(a).split(".")[2]
+		a=a.split("\'")[0]
+		indicatorl.append(a) 
+
+
+	print("clear called")
+
+	return render(request, 'blog/nav.html', {'companies': companies,"indicatorlist":indicatorl})
+
 
 
 def updatestrategy(request,pk):
 	if request.method == 'POST':
-		sid=request.POST.get('strat')
-		strat = get_object_or_404(Strategy,pk=sid)
-		strat.indicator1 = strat.indicator1.down_cast()
-		strat.indicator2 = strat.indicator2.down_cast()
 
-		companies = Companies.objects.all()
-		# len1=int(request.POST.get('for1'))
-		# len2=int(request.POST.get('for2'))
-		
-		indi1=apps.get_model("blog",str(strat.indicator1.__class__.__name__))()
+		global strategyids
+		for ids in strategyids:
+			sid=ids
+			strat = get_object_or_404(Strategy,pk=sid)
+			strat.indicator1 = strat.indicator1.down_cast()
+			strat.indicator2 = strat.indicator2.down_cast()
 
-		indi2=apps.get_model("blog",str(strat.indicator2.__class__.__name__))()
-		print(strat.id)
+			companies = Companies.objects.all()
+			# len1=int(request.POST.get('for1'))
+			# len2=int(request.POST.get('for2'))
+			
+			indi1=apps.get_model("blog",str(strat.indicator1.__class__.__name__))()
 
-		fullfieldlist=indi1._meta.get_fields(include_parents=False)
-		shortfieldlist=list()
-		i=0
-		print(str(fullfieldlist))
+			indi2=apps.get_model("blog",str(strat.indicator2.__class__.__name__))()
+			print(strat.id)
 
-		for a in fullfieldlist:
-			if i==0:
-				pass
-			else:
-				
-				a=str(a).split(".")[2]
-				a=a.split("\'")[0]
-				shortfieldlist.append(a)
-			i+=1
-	   
-		c=True
+			fullfieldlist=indi1._meta.get_fields(include_parents=False)
+			shortfieldlist=list()
+			i=0
+			print(str(fullfieldlist))
 
-
-		for a in shortfieldlist:
-			if not request.POST.get(str(a)+"1"):
-				c=False
-
-		fullfieldlist2=indi2._meta.get_fields(include_parents=False)
-		shortfieldlist2=list()
-		print("----------------------------------------")
-		i=0
-
-		for a in fullfieldlist2:
-			if i==0:
-				pass
-			else:
-			   
-				a=str(a).split(".")[2]
-				a=a.split("\'")[0]
-				shortfieldlist2.append(a)
-			i+=1
-	  
-
-		for a in shortfieldlist2:
-			if not request.POST.get(str(a)+"2"):
-				c=False
+			for a in fullfieldlist:
+				if i==0:
+					pass
+				else:
+					
+					a=str(a).split(".")[2]
+					a=a.split("\'")[0]
+					shortfieldlist.append(a)
+				i+=1
+		   
+			c=True
 
 
-
-		if c:
 			for a in shortfieldlist:
+				if not request.POST.get(str(a)+"1"):
+					c=False
 
-			   setattr(strat.indicator1,a,request.POST.get(str(a)+"1"))
-			   print(getattr(strat.indicator1,a))
-			   print("set inside")
+			fullfieldlist2=indi2._meta.get_fields(include_parents=False)
+			shortfieldlist2=list()
+			print("----------------------------------------")
+			i=0
+
+			for a in fullfieldlist2:
+				if i==0:
+					pass
+				else:
+				   
+					a=str(a).split(".")[2]
+					a=a.split("\'")[0]
+					shortfieldlist2.append(a)
+				i+=1
+		  
 
 			for a in shortfieldlist2:
-			   setattr(strat.indicator2,a,request.POST.get(str(a)+"2"))
-			   print(getattr(strat.indicator2,a))
-		
-		strat.indicator1.save() 
-		strat.indicator2.save()
-		strat.save()
+				if not request.POST.get(str(a)+"2"):
+					c=False
 
+
+
+			if c:
+				for a in shortfieldlist:
+
+				   setattr(strat.indicator1,a,request.POST.get(str(a)+"1"))
+				   print(getattr(strat.indicator1,a))
+				   print("set inside")
+
+				for a in shortfieldlist2:
+				   setattr(strat.indicator2,a,request.POST.get(str(a)+"2"))
+				   print(getattr(strat.indicator2,a))
+			
+			strat.indicator1.save() 
+			strat.indicator2.save()
+			strat.save()
+			print(strat.id)
+			s = Strategy.objects.all().filter(pk = strat.id)
+			s = list(s)[0]
+			print('Strategy created = '+str(s))
+			print('Indicator1 = '+str(s.indicator1.down_cast()))
+			print('Indicator2 = '+str(s.indicator2.down_cast()))
+			print("done!!!!!!!!")
+
+		strategyids.clear()
 		r = Refreshed(name="Strategy")
 		r.save()
 		print("\nAdded refresh object")
-
-
-		print(strat.id)
-
-
-		s = Strategy.objects.all().filter(pk = strat.id)
-		s = list(s)[0]
-		print('Strategy created = '+str(s))
-		print('Indicator1 = '+str(s.indicator1.down_cast()))
-		print('Indicator2 = '+str(s.indicator2.down_cast()))
-		print("done!!!!!!!!")
 
 		return render(request, "blog/nav.html",{'companies': companies})  
 
@@ -157,25 +187,24 @@ def updatestrategy(request,pk):
 def createstrategy(request,pk):
 	if request.method == 'POST':
 		if request.POST.get('indicator1') and request.POST.get('indicator2') and request.POST.get('comparator') and request.POST.get('name') and request.POST.get('instrument') :
-			strat=Strategy()
-			
-			strat.comparator= request.POST.get('comparator')
-			strat.name= request.POST.get('name')
-			strat.instrument= request.POST.get('instrument')
-			i1=apps.get_model("blog",request.POST.get('indicator1'))()
-			i1.save()
 
-
-			i2=apps.get_model("blog",request.POST.get('indicator2'))()
-			i2.save()
-			strat.indicator1=i1 
-			strat.indicator2=i2
-
-
-		   
-			strat.task_id = "task_obj.id"
-			strat.save()
-			print(strat.id)
+			global instrumentlist
+			global strategyids
+			for instruments in instrumentlist:
+				strat=Strategy()             
+				strat.comparator= request.POST.get('comparator')
+				strat.name= request.POST.get('name')
+				strat.instrument= instruments
+				i1=apps.get_model("blog",request.POST.get('indicator1'))()
+				i1.save()
+				i2=apps.get_model("blog",request.POST.get('indicator2'))()
+				i2.save()
+				strat.indicator1=i1 
+				strat.indicator2=i2
+				strat.task_id = "task_obj.id"
+				strat.save()
+				print(strat.id)
+				strategyids.append(strat.id)
 		  
 			sq=strat.indicator1._meta.get_fields(include_parents=False)
 			print("SQ is ----------"+str(sq))
@@ -213,7 +242,9 @@ def createstrategy(request,pk):
 				a=str(a).split(".")[2]
 				a=a.split("\'")[0]
 				indicatorl.append(a)
-			choice=Choices()             
+			choice=Choices()   
+			
+			instrumentlist.clear()          
 			
 			return render(request, "blog/nav2.html",{'companies': companies,"strat":strat.id,"fieldlist1":sp,"fieldlist2":sp2,"indicatorlist":indicatorl,"choice":choice, "strat_obj" : strat})
 	else:

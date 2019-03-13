@@ -181,7 +181,7 @@ class Work(object):
 			for s in self.strat_list:
 				t = int(s.instrument)
 
-				self.strat_data[s.pk]['status'] = self.strategy_status(s)
+				self.strat_data[s.pk]['status'] ,self.strat_data[s.pk]['timestamp'] = self.strategy_status(s)
 
 				strategy_meta[str(s)] = {
 					'status' : str(self.strat_data[s.pk]['status']),

@@ -10,6 +10,7 @@ urlpatterns = [
     path('company/<int:pk>/submit', views.updatestrategy, name='updatestrategy'),
     path('dashboard', views.display_dashboard, name='dashboard'),
     path('manage', views.manage, name='manage'),
+    path('clear', views.clear, name='clear'),
     path('manage/<int:pk>/', views.strat_detail, name='strat_detail'),
     path('delete_all', views.delete_all, name='delete_all'),
     re_path(r'(?P<task_id>[\w-]*)/revoke', views.revoke, name='revoke'),    

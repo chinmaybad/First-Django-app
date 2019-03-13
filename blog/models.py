@@ -48,6 +48,7 @@ class Choices():
 	slowd_matype = list()
 	band_type = list()
 	field = list()
+	PMO_type = list()
 
 	def __init__(self):
 		 self.interval = ['minute', 'day', '3minute','5minute','10minute','15minute','30minute','60minute']
@@ -57,6 +58,7 @@ class Choices():
 		 self.slowd_matype = ['SMA', 'EMA', 'Double', 'Triple', 'Triangular']
 		 self.band_type = ['upper', 'middle', 'lower']
 		 self.field = ["close", "open", "high", "low"]
+		 self.PMO_type = ['PMO', 'PMO_signal']
 
 
 
@@ -190,7 +192,7 @@ class Exponential_Moving_Average(Indicator):	#EMA
 
 
 
-class RSI(Indicator):		#inaccurate for DAY
+class RSI(Indicator):
 	period = models.CharField(max_length=100, default='14')
 	interval = models.CharField(max_length=100, default='minute')
 	# prev_val = models.CharField(max_length=100, default='0')
@@ -486,7 +488,6 @@ class Bollinger_Band(Indicator):	#Moving Average Convergence/Divergence Histogra
 class Money_Flow_Index(Indicator):	
 	period = models.CharField(max_length=100, default='10')
 	interval = models.CharField(max_length=100, default='minute')	
-# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -500,7 +501,6 @@ class Money_Flow_Index(Indicator):
 
 class VWAP(Indicator):	
 	interval = models.CharField(max_length=100, default='minute')	
-# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -524,7 +524,6 @@ class VWAP(Indicator):
 class ATR(Indicator):	
 	period = models.CharField(max_length=100, default='10')
 	interval = models.CharField(max_length=100, default='minute')	
-# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -539,7 +538,6 @@ class ATR(Indicator):
 class Momentum_Indicator(Indicator):	
 	period = models.CharField(max_length=100, default='14')
 	interval = models.CharField(max_length=100, default='minute')	
-# · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
 
 	def evaluate(self, kite_fetcher, instrument):
 		period = int(self.period)
@@ -552,20 +550,85 @@ class Momentum_Indicator(Indicator):
 		return "Momentum( "+ self.period +", "+ self.interval +")"
 
 
-# class High_Low_Band(Indicator):	
-# 	period = models.CharField(max_length=100, default='14')
-# 	interval = models.CharField(max_length=100, default='minute')	
-# # · minute, day, 3minute, 5minute, 10minute, 15minute, 30minute, 60minute
+class High_Low(Indicator):	
+	interval = models.CharField(max_length=100, default='minute')
+	
+	def evaluate(self, kite_fetcher, instrument):
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		# print('\n\nhigh = ' + str(df['high'].iloc[-1]))
+		# print('\n\nlow = ' + str(df['low'].iloc[-1]))
+		result = df['high'].iloc[-1] - df['low'].iloc[-1]
+		return np.round(result, 4)
 
-# 	def evaluate(self, kite_fetcher, instrument):
-# 		period = int(self.period)
-# 		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+	def __str__(self):
+		return "High - Low( "+ self.interval +")"
 
-# 		result = talib.MOM(close = df['close'], timeperiod = period)
-# 		return np.round(result, 4)
+class Price_Momentum_Oscillator(Indicator):	
+	field = models.CharField(max_length=100, default='close')
+	interval = models.CharField(max_length=100, default='minute')	
+	smoothing_period = models.CharField(max_length=100, default='35')	
+	double_smoothing_period = models.CharField(max_length=100, default='20')	
+	signal_period = models.CharField(max_length=100, default='10')	
+	PMO_type = models.CharField(max_length=100, default='PMO')	
+	
 
-# 	def __str__(self):
-# 		return "Momentum( "+ self.period +", "+ self.interval +")"
+	def evaluate(self, kite_fetcher, instrument):
+	# https://stockcharts.com/school/doku.php?id=chart_school:technical_indicators:dppmo
+		s_period = int(self.smoothing_period)
+		ds_period =int(self.double_smoothing_period)
+		sig = int(self.signal_period)
+		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		df['ROC'] = df[self.field].pct_change() * 100
+		mul_35 = float(2)/s_period
+		mul_20= float(2)/ds_period
+		df['35-EMA'] = 0
+		df['20-EMA'] = 0
+
+		df.loc[s_period+1, '35-EMA'] = np.mean(df.loc[1:s_period, 'ROC'])
+
+		for i in range(s_period+2, len(df)):
+			df.loc[i, '35-EMA'] = df.loc[i, 'ROC'] * mul_35  +  df.loc[i-1, '35-EMA'] * (1-mul_35)
+
+		df.loc[:, '35-EMA'] = df.loc[:, '35-EMA'] * sig
+		df.loc[s_period + ds_period + 1, '20-EMA'] = np.mean(df.loc[s_period+2 : s_period+ds_period+1, '35-EMA'])    
+
+		for i in range(s_period + ds_period + 2, len(df)):
+			df.loc[i, '20-EMA'] = (df.loc[i, '35-EMA'] -  df.loc[i-1, '20-EMA'] ) * mul_20  +  df.loc[i-1, '20-EMA']
+
+		if(self.PMO_type == 'PMO_signal'):
+			df['signal']  = talib.EMA(df.loc[:, '20-EMA'], timeperiod=sig)
+			return np.round(df['signal'].iloc[-1], 4)
+		else:
+			return np.round(df['20-EMA'].iloc[-1], 4)
+
+	def __str__(self):
+		return "PMO( "+ self.smoothing_period +", "+ self.double_smoothing_period +", "+ self.signal_period +", "+ self.interval +")"
+
+
+class Intraday_Momentum_Index(Indicator):
+	period = models.CharField(max_length=100, default='20')
+	interval = models.CharField(max_length=100, default='minute')
+
+	def evaluate(self, kite_fetcher, instrument):
+		# https://library.tradingtechnologies.com/trade/chrt-ti-intraday-momentum-index.html
+		period = int(self.period)
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		df = df.iloc[-1*period: , :]
+		diff = df.loc[:, 'close'] - df.loc[:, 'open']
+		up = diff[diff > 0]
+		down = diff[diff < 0]
+
+		try:
+			sUp, sDown = np.sum(up), abs(np.sum(down))
+			result = (sUp / (sUp + sDown)) * 100
+		except:
+			result = 0
+		return np.round(result, 3)
+
+	def __str__(self):
+		return "IMI("+ self.period +", "+ self.interval +")"
+
 
 class Strategy(models.Model):
 	name=models.CharField(max_length=100)

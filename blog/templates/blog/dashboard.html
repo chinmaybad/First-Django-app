@@ -163,7 +163,7 @@
 						}
 
 						
-						if(data[key1]['status'] == 'True'){
+						// if(data[key1]['status'] == 'True'){
 							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
 							for(key2 in data[key1]){
 								if(key2 != 'status'){
@@ -171,7 +171,7 @@
 								}
 							}
 							trueStr += "</tr>";
-						}
+						// }
 						// else{
 						// 	falseStr += "<tr><th>"+key1+"</th>";
 						// 	for(key2 in data[key1]){
@@ -182,7 +182,7 @@
 						
 					}
 
-					document.getElementById("my_table").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr + falseStr +"</table>";
+					document.getElementById("my_table").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr +"</table>";
 				});
 			});		
 		}
