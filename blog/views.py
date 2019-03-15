@@ -1,6 +1,7 @@
+
 from django.shortcuts import render, redirect
 from .models import Post
-from .models import Strategy, Companies, Refreshed, Indicator, Choices
+from .models import Strategy, Companies, Refreshed, Indicator, Choices,Strategy_Group
 from django.utils import timezone
 from django.shortcuts import render, get_object_or_404
 from celery.result import AsyncResult
@@ -12,13 +13,19 @@ import pandas as pd
 import os
 from django.apps import apps
 import blog.extras.access_token as AT
+from django.db.models import Q
 
 logger = logging.getLogger(__name__)
 
 
 
 instrumentlist=list()
-strategyids=list()
+strategyids=list() #Used in Nav and StratGroup
+
+stratstring=str()
+stratstringdisplay=str()
+strategygrouplist=list()
+logiclist=list()
 
 
 def post_list(request):
@@ -323,8 +330,7 @@ def strat_detail(request,pk):
 	return redirect('manage')
 
 
-def delete_all(request):
-	from django.db.models import Q
+def delete_all(request):	
 
 	for strat in Strategy.objects.filter(~Q(name = "DO_NOT_DELETE")):
 		strat.indicator1.delete()
@@ -335,4 +341,116 @@ def delete_all(request):
 	r.save()
 	print("\nAdded refresh object")
 
-	return redirect('manage')
+def stratgroup(request):
+
+	global strategyids
+	strategyids.clear()
+
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+	global stratstringdisplay
+
+
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+
+
+def stratselect(request,pk):
+
+
+	global stratstring,strategyids,stratstringdisplay
+
+	print("selected")
+
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+	strat = get_object_or_404(Strategy,pk=pk)
+	
+
+	stratstring=stratstring+str(strat.pk)
+	stratstringdisplay=stratstringdisplay+" "+str(strat.name)+"("+str(strat.instrument)+")"
+
+
+	
+
+
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+
+
+
+def stratAnd(request):
+
+	global stratstring,stratstringdisplay
+
+	stratstring=stratstring+" and "
+	stratstringdisplay=stratstringdisplay+" and "
+
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+	
+
+
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+
+
+def stratOr(request):
+
+	global stratstring,stratstringdisplay
+
+	stratstring=stratstring+" or "
+	stratstringdisplay=stratstringdisplay+" or "
+
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+	
+
+
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+
+
+
+def stratclear(request):
+	global stratstring, strategyids,stratstringdisplay
+
+	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
+	stratstring=""
+	stratstringdisplay=""
+	strategyids.clear()
+	
+
+
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstring})
+
+def stratgroupsubmit(request):
+
+	global stratstring,stratstringdisplay
+	companies = Companies.objects.all() 
+	print("here")
+
+	if request.method == 'POST':
+
+		group=Strategy_Group()
+		group.name=request.POST.get('groupname')
+		group.exp=stratstring
+		group.display = stratstringdisplay
+		print(stratstring)
+		group.save()
+
+		print("Group created with "+ group.name+"   "+group.exp)
+
+		r = Refreshed(name="Strategy_Group")
+		r.save()
+
+
+		stratstring=""
+		stratstringdisplay=""
+
+	return render(request, "blog/nav.html",{'companies': companies})  
+
+
+
+
+
+
+
+
+
+
+
+
+

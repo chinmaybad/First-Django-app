@@ -4,7 +4,7 @@
 <!-- {% load static %} -->
 <html>
 	<head>
-		<title>Django Girls blog</title>
+		<title>Sabertooth Investments</title>
 		  <meta charset="utf-8">
 		  <meta name="viewport" content="width=device-width, initial-scale=1">
 		  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
@@ -70,30 +70,6 @@
 				 	/*width: 1400px;*/
 				 	background-color: #f0f0f0;
 				 }
-/*				 #upper{
-				 	display: inline-block;
-				 	float: left;
-				 }*/
-/*				 #upper li a{
-				 	
-				 	width: 60px;
-					color: #555555;
-				 }
-
-
-					#upper li {
-						float: left;
-						display: inline-block;
-
-					  
-					}
-
-					#upper li a {
-					  
-					  width: 60px;
-					  
-					}
-*/
 
 		</style>
    </head>
@@ -117,18 +93,11 @@
   	<h1 align="middle">Dashboard</h1>
 
 
-<!-- 
-	{% for s in strat_list %}
-	<div class="panel panel-default">
-	 <div class="panel-body"><p id="{{forloop.counter}}"> {{forloop.counter}}</p></div>
-	
-	</div>
-	{% endfor %} -->
-
-
 	<div class="tab1">
 	
 	<table id="my_table" class="table table-light table-bordered table-hover table-responsive ">
+	</table><br><br>
+	<table id="my_table1" class="table table-light table-bordered table-hover table-responsive ">
 	</table>
 
 	</div>
@@ -142,8 +111,10 @@
 		function updateProgress (progressUrl) {			
 			fetch(progressUrl).then(function(response) {
 				response.json().then(function(data) {
+					var temp = data
 
 					var str = "", trueStr="", falseStr="";
+					data = temp['strategy_meta']
 				// header
 					for(var key1 in data){
 						str += "<thead class=\"thead-dark\"><tr><th>Strategy</th>";
@@ -158,12 +129,12 @@
 
 					for(var key1 in data){
 
-						if(key1 == "DO_NOT_DELETE(884737) ::  999 > 999"){
+						if(key1 == "DO_NOT_DELETE(884737)"){
 							continue;
 						}
 
 						
-						// if(data[key1]['status'] == 'True'){
+						if(data[key1]['status'] == 'True'){
 							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
 							for(key2 in data[key1]){
 								if(key2 != 'status'){
@@ -171,18 +142,64 @@
 								}
 							}
 							trueStr += "</tr>";
-						// }
-						// else{
-						// 	falseStr += "<tr><th>"+key1+"</th>";
-						// 	for(key2 in data[key1]){
-						// 		falseStr += "<td>" + data[key1][key2] +"</td>";
-						// 	}
-						// 	falseStr += "</tr>";
-						// }
+						}
+						else{
+							falseStr += "<tr><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									falseStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							falseStr += "</tr>";
+						}
 						
 					}
 
-					document.getElementById("my_table").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr +"</table>";
+					document.getElementById("my_table").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr + falseStr + "</table>";
+
+					
+					var str = "", trueStr="", falseStr="";
+					data = temp['strategy_group_meta']
+				
+					for(var key1 in data){
+						str += "<thead class=\"thead-dark\"><tr><th>Strategy Group</th>";
+						for(key2 in data[key1]){
+							if(key2 != 'status'){
+								str += "<th>" + key2 +"</th>";
+							}
+						}
+						str += "</tr></thead>";
+						break;
+					}
+
+					for(var key1 in data){
+
+						if(key1 == "DO_NOT_DELETE"){
+							continue;
+						}
+						
+						if(data[key1]['status'] == 'True'){
+							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									trueStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							trueStr += "</tr>";
+						}
+						else{
+							falseStr += "<tr><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									falseStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							falseStr += "</tr>";
+						}
+						
+					}
+
+					document.getElementById("my_table1").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr + falseStr + "</table>";
 				});
 			});		
 		}

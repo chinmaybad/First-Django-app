@@ -6,7 +6,7 @@ from time import sleep
 import pandas as pd
 import datetime
 from threading import Timer
-from .models import Strategy, Refreshed
+from .models import Strategy, Refreshed, Strategy_Group
 from .indicators import KiteFetcher
 import os
 import numpy as np
@@ -22,10 +22,12 @@ class Work(object):
 		self.access_token = AT.get_access_token()
 		AT.set_task_id(self.task.request.id)
 
-		self.strat_list = Strategy.objects.all()		
+		self.strat_list = Strategy.objects.all()
+		self.strat_group_list = Strategy_Group.objects.all()		
 		self.tokens = list()	
 		self.global_data = dict()		#price or volume only
 		self.strat_data = dict()		#indicator 1 & 2 , status, etc
+		self.strat_group = dict()
 		self.tick_count, self.min_count = 1, 0
 
 		self.time_map = {'minute' : 1, 'day' : 13, '3minute' : 1, '5minute' : 1, '10minute' : 1, '15minute' : 2, '30minute' : 3 , '60minute' : 4}
@@ -39,6 +41,9 @@ class Work(object):
 			self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0, 'timestamp':pd.Timestamp('today')})
 			s.indicator1 = s.indicator1.down_cast()
 			s.indicator2 = s.indicator2.down_cast()
+
+		for sg in self.strat_group_list:
+			self.strat_group[sg.pk] = dict({'status' : False, 'exp':sg.display, 'eval':'NONE'})
 
 		self.tokens = list(set(self.tokens))		#repeated tokens || multiple strategies on single instrument
 			
@@ -87,9 +92,18 @@ class Work(object):
 				self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0, 'timestamp':pd.Timestamp('today')})
 				strats_to_update.append(s)
 
-		self.update_indicators(strats_to_update, force=True)
 		print("Strategies updated successfully")
 
+
+	def strat_group_refresh(self):
+		print("Strat_Group_Refresh method called...")
+		old_strat_group_list = self.strat_group_list
+		self.strat_group_list = Strategy_Group.objects.all()
+
+		for sg in self.strat_group_list:
+			if(sg not in old_strat_group_list):
+				self.strat_group[sg.pk] = dict({'status' : False, 'exp':sg.display, 'eval':''})
+		print("Strategy_Group updated successfully")
 
 
 	def update_indicators(self, strats_to_update, force=False):		
@@ -137,15 +151,25 @@ class Work(object):
 				ret = True
 		
 		if(prev == True):
-			return ret, self.strat_data[s.pk]['timestamp']
+			self.strat_data[s.pk]['status'] ,self.strat_data[s.pk]['timestamp'] =  ret, self.strat_data[s.pk]['timestamp']
 		else:
-			return ret, pd.Timestamp('today')
+			self.strat_data[s.pk]['status'] ,self.strat_data[s.pk]['timestamp'] =  ret, pd.Timestamp('today')
 
 
+	def strat_group_status(self, sg):
+		exp = sg.exp
+		l = exp.split(' ')
+		try:
+			for i in l:
+				if(i not in ['and', 'or', 'not', 'True', 'False']):
+					exp = exp.replace(i, str( self.strat_data[int(i)]['status'] ))
+			self.strat_group[sg.pk]['status'] = eval(exp)
+		except:
+			self.strat_group[sg.pk]['status'] = False
+		self.strat_group[sg.pk]['eval'] = exp
 
 	def run(self):      
 		tokens = self.tokens
-		# kws = KiteTicker('0ld4qxtvnif715ls', 'rCbSsBUalr9wHT2hiIZ30ArWFuvD9mFZ')
 		kws = KiteTicker('0ld4qxtvnif715ls', self.access_token)
 
 		def stop_gracefully():
@@ -155,43 +179,36 @@ class Work(object):
 		
 						  
 		def on_ticks(ws, ticks):
-			print('\n______________________________ON TICKS_____________________________\n')
-			
-			# if(not self.time_stamp == pd.Timestamp('today').minute):
-			# 	for k in self.global_data.keys():
-			# 		self.global_data[k]['open'] = self.global_data[k]['price']
-			# 		self.global_data[k]['high'] = 0
-			# 		self.global_data[k]['low'] = 999999
-			# 		self.time_stamp = pd.Timestamp('today').minute
+			print('\n______________________________ON TICKS_____________________________\n')			
 
 			for i in ticks:		
 				t = i['instrument_token']
 				self.global_data[t]['price'] = i['last_price']
 				self.global_data[t]['volume'] = i['volume']				
 
-				# if(self.global_data[t]['high'] < i['last_price']):
-				# 	self.global_data[t]['high'] = i['last_price']
-
-				# if(self.global_data[t]['low'] > i['last_price']):
-				# 	self.global_data[t]['low'] = i['last_price']
-
-
-
 			strategy_meta = dict()
+			strategy_group_meta = dict()
+
 			for s in self.strat_list:
 				t = int(s.instrument)
-
-				self.strat_data[s.pk]['status'] ,self.strat_data[s.pk]['timestamp'] = self.strategy_status(s)
+				self.strategy_status(s)
 
 				strategy_meta[str(s)] = {
+					'criteria' : s.cond_str(),
 					'status' : str(self.strat_data[s.pk]['status']),
 					'timestamp' : self.strat_data[s.pk]['timestamp'],
-					# 'price' : str(np.round(self.global_data[t]['price'], 4)),
-					# 'volume' : str(np.round(self.global_data[t]['volume']) ),
 					'price' : str(self.global_data[t]['price']),
-					'volume' : str(self.global_data[t]['volume']) ,
+					# 'volume' : str(self.global_data[t]['volume']) ,
 					'indicator 1' : str(self.strat_data[s.pk]['indicator1']) + "<br>"+ str(s.indicator1) +"" ,
 					'indicator 2' : str(self.strat_data[s.pk]['indicator2']) + "<br>"+ str(s.indicator2) +"" 
+				}
+
+			for sg in self.strat_group_list:
+				self.strat_group_status(sg)
+				strategy_group_meta[str(sg)] = {
+					'status' : str(self.strat_group[sg.pk]['status']),
+					'exp' : self.strat_group[sg.pk]['exp'],
+					'eval' : self.strat_group[sg.pk]['eval']
 				}
 
 
@@ -200,18 +217,25 @@ class Work(object):
 			df = df[new_columns[::-1]]
 			strategy_meta = df.to_dict()
 
-			self.task.update_state(state='PROGRESS', meta=strategy_meta)
+			self.task.update_state(state='PROGRESS', meta={'strategy_meta':strategy_meta, 'strategy_group_meta':strategy_group_meta})
 			print(strategy_meta)
+			print('\n------\n')
+			print(strategy_group_meta)
 
 			if(self.tick_count == 0):
 				r = Refreshed.objects.all().filter(name = 'Strategy')
 				if(len(r) > 0):		#Strategies were modified
-					print("\nRefreshing needed.....")
+					print("\nStrategy Refreshing needed.....")
 					stop_gracefully()
 					self.strat_refresh()
 					self.run()
 					r.delete()
-					print("_______________Deleted refresh objects__________________")
+
+				r = Refreshed.objects.all().filter(name = 'Strategy_Group')
+				if(len(r) > 0):		#Strategies were modified
+					print("\nnStrategy Group Refreshing needed.....")
+					self.strat_group_refresh()
+					r.delete()
 
 			self.tick_count = (self.tick_count + 1)%10
 			

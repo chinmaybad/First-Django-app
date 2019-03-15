@@ -1,7 +1,7 @@
+
  <!DOCTYPE html>
     <html>
     <head>
-    <title>Sabertooth Investments</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
@@ -150,7 +150,6 @@
           <li><a href="#">Home</a></li>
           <li><a href="{% url 'manage' %}">Manage</a></li>
           <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
-          <li><a href="{% url 'stratgroup' %}">Strategy Group</a></li>
         </ul>
       </div>
   </nav>
@@ -161,8 +160,8 @@
 
         <input type="text" id="mySearch" onkeyup="myFunction()" placeholder="Search.." title="Type in a category">
         <ul id="myMenu">
-         {% for company in companies %}
-         <li><a href="{% url 'clist_detail' pk=company.pk %}" onclick="compselect()">{{company.fullname}}({{company.name}})</a></li>  
+         {% for strategy in strat_list %}
+         <li><a href="{% url 'stratselect' pk=strategy.pk %}" onclick="compselect()">{{strategy.name}}({{strategy.instrument}})</a></li>  
         {% endfor %}
         
           
@@ -172,14 +171,28 @@
       
       <div class="right" style="background-color:#ffffff">
 
+        <h1 align="middle">Create your Strategy Group</h1>
+
         <div id="form1"> 
 
 
 
 
 
-    <form action="" method="POST">
+    <form action="" method="POST" >
       {% csrf_token %}
+
+    
+
+   <div class="form-group">
+    <label for="text">Create your String</label>
+    <input type="text" class="form-control" id="groupname" name="groupstring" value="{{stratstring}}" required="true" readonly="true"  />
+  </div>
+
+    <div class="form-group">
+    <label for="text">Strategy Group name</label>
+    <input type="text" class="form-control" id="groupname" name="groupname" value="" required="true" />
+  </div>
 
    
      
@@ -187,11 +200,11 @@
   
 
 
-<!--  -->
+<!-- Enter the form here -->
 
-  <div class="form-group">
+<!--   <div class="form-group">
     <label for="text">Instrument</label>
-    <input type="text" class="form-control" id="instrument" name="instrument" value="{{instrumentlist}}" required="true" readonly="true" />
+    <input type="text" class="form-control" id="instrument" name="instrument" value="{{instrumentlist}}" required="true" />
   </div>
   <div class="form-group">
     <label for="select1">Select an Indicator:</label>
@@ -228,53 +241,26 @@
     <label for="text">Strategy</label>
     <input type="text" class="form-control" id="instrument" value="" name="name" required />
   </div>
-  <!--  <button type="submit" formaction="next" type="submit" value="next" class="btn btn-default">Next</button> -->
-   <button type="submit" id="sub" formaction="next" value="Submit" class="btn btn-default">Next</button>
+   <button type="submit" formaction="next" type="submit" value="next" class="btn btn-default">Next</button> -->
+
+   <a class="btn btn-default" id="clear" href="{% url 'stratclear' %}">Clear</a>
+   <a class="btn btn-default" id="clear" href="{% url 'stratAnd' %}">And</a>
+   <a class="btn btn-default" id="clear" href="{% url 'stratOr' %}">Or</a>
+   <br>
+   <br>
+
+   <button class="btn btn-primary" type="submit"  formaction="submit" value="Submit" class="btn btn-default">Submit</button>  
    </form>
 
 
-   <a class="btn btn-default" id="clear" href="{% url 'clear' %}">Clear</a>
+
   
 
 
 
   </div>
 
-  <div class="optional">
-    <div id="indicator1option">
-  <!--    <div class="form-group">
-    <label for="int1">Select an Interval:</label>
-  <select class="form-control" id="int1" name="interval1" >
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-  </select>
-  </div>
-  <div id="indicator1option2">
-   <div class="form-group">
-    <label for="int1">Select a period:</label>
-  <select class="form-control" id="period1" name="period1" >
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-  </select>
-  </div> -->
-  </div>
-  <div id="indicator2option">
-<!--    <div class="form-group">
-    <label for="int1">Select a standar deviation:</label>
-  <select class="form-control" id="int1" name="standarddev1" >
-    <option value="1">1</option>
-    <option value="2">2</option>
-    <option value="3">3</option>
-    <option value="4">4</option>
-  </select>
-  </div> -->
 
-  </div>
-  </div>
   </div>
  
 

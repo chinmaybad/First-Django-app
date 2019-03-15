@@ -638,5 +638,20 @@ class Strategy(models.Model):
 	instrument=models.CharField(max_length=100)
 
 	def __str__(self):
+		return self.name +'('+ self.instrument +')'
+
+	def cond_str(self):
 		comp_dict = {'1' : ' > ', '2' :' < ', '3':' Crosses Above ', '4':' Crosses Below '}
-		return self.name +'('+ self.instrument +') ::  '+str(self.indicator1) + comp_dict[self.comparator] + str(self.indicator2)
+		return str(self.indicator1) + comp_dict[self.comparator] + str(self.indicator2)
+
+
+class Strategy_Group(models.Model):
+	name=models.CharField(max_length=100)
+	exp=models.CharField(max_length=200, default = 'True')
+	display=models.CharField(max_length=200, default = 'NONE')
+
+	def __str__(self):
+		return self.name
+
+	def cond_str(self):
+		return self.exp
