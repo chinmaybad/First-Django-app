@@ -21,6 +21,11 @@
     .strategies{
         font-size: 14px;
     }
+    #delete{
+
+      background-color: #ff0000;
+      margin: 20px;
+    }
     .navbar { 
         margin-bottom: 10px;
         background-color: #000000;
@@ -29,6 +34,25 @@
          #rest{
             margin-left: 10px;
          } 
+
+
+        .left{
+
+          display: inline-block;
+
+          
+         
+          width: 200px;
+
+        }
+           .right{
+
+            padding-left: 200px;
+
+           
+          
+
+        }
     #naav a 
     { 
      color: #ffffff; 
@@ -37,6 +61,15 @@
     { 
     color: #ffffff;
      }
+
+     #demo1,#demo2{
+        width : 32%;
+        margin: 20px;
+       
+
+
+     }
+
         </style>
     </head>
         
@@ -66,13 +99,25 @@
     {% endfor %} -->
 
 
-    
-        <table id="demo" ></table>
-        <p id="demo1"> </p>
-        <a href="{% url 'clist' %}">Go back</a>
+<div class="left">
+  
+    <h2>Strategies</h2>
+        <table class="table table-light table-bordered table-hover table-responsive " id="demo1"> </table><br>
+</div>
+<div class="right">
+
+   <h2>Strategy Groups</h2>
+    <table class="table table-light table-bordered table-hover table-responsive " id="demo2"> </table><br>
+  
+
+</div>
+
+      
+       
+<!--         <a href="{% url 'clist' %}">Go back</a> -->
         </div>
 
-        <a href="{% url 'delete_all' %}">Delete all</a>
+        <a class="btn btn-primary" id="delete" href="{% url 'delete_all' %}">Delete all</a>
 
 
 
@@ -92,15 +137,26 @@
         function change(){
             var str = "";
             {% for s in strat_list %}
-                // str += "<tr><td><b>  " +"{{s.name}}"+ "</b></td><td>"+   "<a href=\"{% url 'strat_detail' pk=s.pk %}\"                     >Remove</a>"+  "</td></tr>";
                     
                     var a="{{s.pk}}"
-                    str += "<tr><td><b>  " +"{{s}}"+ "</b></td><td>"+        "<button onclick=\"myFunction("+a+")\"                     >Remove</a>"+  "</td></tr>";
+                    str += "<tr><td><b>  " +"{{s}}"+ "</b></td><td align=\"center\">"+        "<button onclick=\"myFunction("+a+")\"                     >Remove</a>"+  "</td></tr>";
             {% endfor %}
-            document.getElementById("demo1").innerHTML = "<table class=\"table\""+">" + str + "</table>";
+            document.getElementById("demo1").innerHTML = "<table class=\"table table-responsive\"  cellspacing=\"0\">"
+            +str +"</table>";
+
+            var str = "";
+            {% for s in strat_group_list %}
+                    
+                    var a="{{s.pk}}"
+                    str += "<tr><td><b>  " +"{{s}}"+ "</b></td><td align=\"center\">"+        "<button onclick=\"myFunction2("+a+")\"                     >Remove</a>"+  "</td></tr>";
+            {% endfor %}
+            document.getElementById("demo2").innerHTML = "<table class=\"table table-responsive\" cellspacing=\"0\">"
+            +str +"</table>";
                     
                     
-                }
+        }
+
+
         function myFunction(s) {
               var txt;
               if (confirm("Are you sure you want to delete the strategy?")) {
@@ -112,8 +168,21 @@
               } else {
                 
               }
-              document.getElementById("demo").innerHTML = txt;
         }
+
+        function myFunction2(s) {
+              var txt;
+              if (confirm("Are you sure you want to delete the strategy?")) {
+                {% for a in strat_group_list %}
+                if({{a.pk}}==s)
+                    window.location.href = "{% url 'strat_group_detail' pk=a.pk %}";
+                {% endfor %}
+                
+              } else {
+                
+              }
+        }
+
         
     </script>
 </body>

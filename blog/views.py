@@ -314,10 +314,11 @@ def manage(request):
 	from django.db.models import Q
 	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
 
-	return render(request, 'blog/manage.html',{"strat_list":strat_list})
+	strat_group = Strategy_Group.objects.filter(~Q(name = "DO_NOT_DELETE"))
+
+	return render(request, 'blog/manage.html',{"strat_list":strat_list, "strat_group_list":strat_group})
 
 def strat_detail(request,pk):
-	strat_list = Strategy.objects.all()
 	strat = get_object_or_404(Strategy,pk=pk)
 
 	strat.indicator1.delete()
@@ -325,6 +326,15 @@ def strat_detail(request,pk):
 	strat.delete()
 	
 	r = Refreshed(name="Strategy")
+	r.save()
+	print("\nAdded refresh object")
+	return redirect('manage')
+
+def strat_group_detail(request,pk):
+	strat = get_object_or_404(Strategy,pk=pk)
+	strat.delete()
+	
+	r = Refreshed(name="Strategy_Group")
 	r.save()
 	print("\nAdded refresh object")
 	return redirect('manage')
@@ -337,9 +347,16 @@ def delete_all(request):
 		strat.indicator2.delete()
 		strat.delete()
 
+	for strat in Strategy_Group.objects.filter(~Q(name = "DO_NOT_DELETE")):
+		strat.delete()
+
 	r = Refreshed(name="Strategy")
 	r.save()
+	r = Refreshed(name="Strategy_Group")
+	r.save()
 	print("\nAdded refresh object")
+
+
 
 def stratgroup(request):
 

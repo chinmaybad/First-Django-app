@@ -521,6 +521,21 @@ class VWAP(Indicator):
 	def __str__(self):
 		return "VWAP( "+ self.interval +")"
 
+
+class ATR(Indicator):	
+	interval = models.CharField(max_length=100, default='minute')	
+
+	def evaluate(self, kite_fetcher, instrument):
+		period = int(self.period)
+		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
+
+		result = talib.TRANGE(high = df['high'], low = df['low'], close = df['close'])
+		return np.round(result, 4)
+
+	def __str__(self):
+		return "True Range( "+ self.interval +")"
+
+
 class ATR(Indicator):	
 	period = models.CharField(max_length=100, default='10')
 	interval = models.CharField(max_length=100, default='minute')	

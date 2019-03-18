@@ -18,6 +18,7 @@ urlpatterns = [
     path('stratgroup/<int:pk>', views.stratselect, name='stratselect'),
     path('stratgroup/submit', views.stratgroupsubmit, name='stratgroupsubmit'),
     path('manage/<int:pk>/', views.strat_detail, name='strat_detail'),
+    path('manage/<int:pk>/', views.strat_group_detail, name='strat_group_detail'),
     path('delete_all', views.delete_all, name='delete_all'),
     re_path(r'(?P<task_id>[\w-]*)/revoke', views.revoke, name='revoke'),    
     re_path(r'(?P<task_id>[\w-]*)/', views.get_progress, name='get_progress'),

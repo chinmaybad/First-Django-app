@@ -92,6 +92,7 @@ class Work(object):
 				self.strat_data[s.pk] = dict({'status' : False, 'indicator1':0, 'indicator2':0, 'timestamp':pd.Timestamp('today')})
 				strats_to_update.append(s)
 
+		self.update_indicators(strats_to_update, force=True)
 		print("Strategies updated successfully")
 
 
