@@ -2,6 +2,8 @@
 *~
 __pycache__
 myenv
+mysite
+blog/migrations
 db.sqlite3
 /static
 .DS_Store
