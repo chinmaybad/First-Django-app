@@ -1,0 +1,220 @@
+
+
+
+<!-- {% load static %} -->
+<html>
+	<head>
+		<title>Sabertooth Investments</title>
+		  <meta charset="utf-8">
+		  <meta name="viewport" content="width=device-width, initial-scale=1">
+		  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+		  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+		  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+	   <!-- -->
+
+		<style>
+			 body {
+					font-family: Arial, Helvetica, sans-serif;
+					background-color: #f0f0f0;
+	
+				  }
+				* {
+				  box-sizing: border-box;
+				  font-size: 18px;
+
+				}
+				a{
+					color: #000000;
+				}
+			
+				.strategies{
+					font-size: 14px;
+				}
+				.navbar { 
+					/*margin-bottom: 10px;*/
+					background-color: #000000;
+					width: 100%;
+					
+				 }
+				 #upper li{
+				  display: inline;
+				  list-style-type: none;
+				  padding-right: 20px;
+				  float: left;
+				}
+			
+				#naav a 
+				{ 
+				 color: #ffffff; 
+				}
+				 #naav li a 
+				{ 
+					display: inline;
+					color: #ffffff;
+					float: left;
+				 }
+				 #rest
+				 {
+					padding: 40px;
+					
+					height: 100%;
+					
+					background-color:#f0f0f0;
+
+				 }
+				 .tab1 th{
+					font-weight: bold;										
+				 }
+				 #my_table{
+				 	/*width: 1400px;*/
+				 	background-color: #f0f0f0;
+				 }
+
+		</style>
+   </head>
+		
+   <body onload="setInterval(change,1000)">
+	 <nav class="navbar " id="naav" >
+	  <div class="container-fluid">
+		<div class="navbar-header">
+		  <a class="navbar-brand" href="#">Sabertooth</a>
+		</div>
+		<ul id="upper">
+		  <li><a href="{% url 'clist' %}">Home</a></li>
+		  <li><a href="{% url 'manage' %}">Manage</a></li>
+		  <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+		</ul>
+	  
+	  </div>
+  </nav>
+  <div id="rest">
+
+  	<h1 align="middle">Dashboard</h1>
+
+
+	<div class="tab1">
+	
+	<table id="my_table" class="table table-light table-bordered table-hover table-responsive ">
+	</table><br><br>
+	<table id="my_table1" class="table table-light table-bordered table-hover table-responsive ">
+	</table>
+
+	</div>
+
+	<a  href="{% url 'revoke' task_id %}"><b>Click here to reset </b></a>
+	</div>
+
+	
+	<script>
+		
+		function updateProgress (progressUrl) {			
+			fetch(progressUrl).then(function(response) {
+				response.json().then(function(data) {
+					var temp = data
+
+					var str = "", trueStr="", falseStr="";
+					data = temp['strategy_meta']
+				// header
+					for(var key1 in data){
+						str += "<thead class=\"thead-dark\"><tr><th>Strategy</th>";
+						for(key2 in data[key1]){
+							if(key2 != 'status'){
+								str += "<th>" + key2 +"</th>";
+							}
+						}
+						str += "</tr></thead>";
+						break;
+					}
+
+					for(var key1 in data){
+
+						if(key1 == "DO_NOT_DELETE(884737)"){
+							continue;
+						}
+
+						
+						if(data[key1]['status'] == 'True'){
+							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									trueStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							trueStr += "</tr>";
+						}
+						else{
+							falseStr += "<tr><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									falseStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							falseStr += "</tr>";
+						}
+						
+					}
+
+					document.getElementById("my_table").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr + falseStr + "</table>";
+
+					
+					var str = "", trueStr="", falseStr="";
+					data = temp['strategy_group_meta']
+				
+					for(var key1 in data){
+						str += "<thead class=\"thead-dark\"><tr><th>Strategy Group</th>";
+						for(key2 in data[key1]){
+							if(key2 != 'status'){
+								str += "<th>" + key2 +"</th>";
+							}
+						}
+						str += "</tr></thead>";
+						break;
+					}
+
+					for(var key1 in data){
+
+						if(key1 == "DO_NOT_DELETE"){
+							continue;
+						}
+						
+						if(data[key1]['status'] == 'True'){
+							trueStr += "<tr bgcolor=\"#98FB98\"><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									trueStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							trueStr += "</tr>";
+						}
+						else{
+							falseStr += "<tr><th>"+key1+"</th>";
+							for(key2 in data[key1]){
+								if(key2 != 'status'){
+									falseStr += "<td>" + data[key1][key2] +"</td>";
+								}
+							}
+							falseStr += "</tr>";
+						}
+						
+					}
+
+					document.getElementById("my_table1").innerHTML = "<table class=\"table table-responsive\" width=\"100%\" cellspacing=\"2\">" + str + trueStr + falseStr + "</table>";
+				});
+			});		
+		}
+			
+		function change(){			
+					// windows.alert("here 1");			
+					var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
+					setTimeout(updateProgress, 0, progressUrl);											
+				}
+			
+			// var progressUrl = '{% url "get_progress" task_id %}';  // django template usage		
+			// setTimeout(updateProgress, 200, progressUrl);
+			//document.getElementById("demo").innerHTML = 'Method End';
+		
+		
+	</script>
+</body>
+</html>

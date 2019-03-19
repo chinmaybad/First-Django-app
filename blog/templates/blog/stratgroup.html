@@ -1,0 +1,401 @@
+
+ <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      font-size: 18px;
+    }
+    /* Create a column layout with Flexbox */
+    .row {
+      display: flex;
+    }
+    #ma1{
+      visibility: hidden;
+    }
+    #clear{
+      margin-top: 10px;
+    }
+    #boll1{
+      visibility: hidden;
+    }
+    
+    /* Left column (menu) */
+    .left {
+      flex: 15%;
+      height: 100vh;
+     
+      padding-left: 20px;
+      /*padding: 10px 0;*/
+    }
+    .left h2 {
+      padding-left: 8px;
+    }
+ /*   #inst {
+       color: #7d7d7d;
+    }*/
+    /* Right column (page content) */
+    .right {
+      flex: 100%;
+      padding-left:65px;
+      margin-top: 20px;
+    }
+    .heading h1{
+      font-family: "Times New Roman", Times, serif;
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+    .right select {
+      font-size: 14px;
+      background-color:#ffffff;
+      border: hidden;
+      color: #000000;
+    }
+    .right p{
+      font-size: 16px;
+    }
+    .right b{
+      font-size: 16px;
+    }
+    .right input{
+      font-size: 14px;
+    }
+    #form1{
+          width: 400px;
+          height: 80px;
+    }
+    .optional
+    {
+      margin-left: 420px;
+      height: 100px;
+      width: 400px;
+   
+    }
+   
+  
+    /* Style the search box */
+    #mySearch {
+      width: 100%;
+      font-size: 15px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding-top: 10px;
+      
+      padding-bottom: 5px;
+      padding-left: 11px;
+      border:1px solid #ddd;
+    }
+    /* Style the navigation menu inside the left column */
+    #myMenu {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      /*width:30px;*/
+      overflow: auto;
+      height: 100vh;
+    }
+    .navbar { margin-bottom: 10px;
+    background-color:#000000; } 
+    #naav a 
+    { 
+    color: #ffffff; }
+     #naav li a 
+    { 
+    color: #ffffff; }
+    #myMenu li a {
+      backgrxound-color: #fefefe;
+      padding: 12px;
+      text-decoration: none;
+      overflow: hidden;
+      font-size: 14px;
+      width: 200px;
+      color: #6d6d6d;
+      display: block
+    }
+    #myMenu li a:hover {
+      background-color: #eee;
+    }
+    </style>
+    </head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <body>
+  <!-- Navigation Bar -->
+
+      <nav class="navbar navbar-default" id="naav" >
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Sabertooth</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li><a href="#">Home</a></li>
+          <li><a href="{% url 'manage' %}">Manage</a></li>
+          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+        </ul>
+      </div>
+  </nav>
+
+
+    <div class="row">
+      <div class="left" style="background-color:#fbfbfb;">
+
+        <input type="text" id="mySearch" onkeyup="myFunction()" placeholder="Search.." title="Type in a category">
+        <ul id="myMenu">
+         {% for strategy in strat_list %}
+         <li><a href="{% url 'stratselect' pk=strategy.pk %}" onclick="compselect()">{{strategy.name}}({{strategy.instrument}})</a></li>  
+        {% endfor %}
+        
+          
+          
+        </ul>
+      </div>
+      
+      <div class="right" style="background-color:#ffffff">
+
+        <h1 align="middle">Create your Strategy Group</h1>
+
+        <div id="form1"> 
+
+
+
+
+
+    <form action="" method="POST" >
+      {% csrf_token %}
+
+    
+
+   <div class="form-group">
+    <label for="text">Create your String</label>
+    <input type="text" class="form-control" id="groupname" name="groupstring" value="{{stratstring}}" required="true" readonly="true" />
+  </div>
+
+    <div class="form-group">
+    <label for="text">Strategy Group name</label>
+    <input type="text" class="form-control" id="groupname" name="groupname" value="" required="true" />
+  </div>
+
+   
+     
+
+  
+
+
+<!-- Enter the form here -->
+
+<!--   <div class="form-group">
+    <label for="text">Instrument</label>
+    <input type="text" class="form-control" id="instrument" name="instrument" value="{{instrumentlist}}" required="true" />
+  </div>
+  <div class="form-group">
+    <label for="select1">Select an Indicator:</label>
+  <select class="form-control" id="select1" name="indicator1" onchange="ind1()">
+
+
+     {% for attr in indicatorlist %}
+      
+
+     
+    <option value="{{attr}}">{{attr}}</option>
+    {% endfor %}
+    <p>{{comp.name}}</p>
+   
+  </select>
+  </div>
+
+   <div class="form-group">
+    <label for="comparator">Select a Comparator:</label>
+  <select class="form-control" id="comparator" name="comparator">
+    <option value="1">Greater Than</option>
+    <option value="2">Less Than</option>
+    <option value="3">Crosses Above</option>
+    <option value="4">Crosses Below</option>
+  </select>
+  </div>
+   <label for="select2">Select an Indicator to compare to:</label>
+  <select class="form-control" id="select2" name="indicator2" onchange="ind2()">
+    {% for attr in indicatorlist %}
+    <option value="{{attr}}">{{attr}}</option>
+    {% endfor %}
+  </select>
+  <div class="form-group">
+    <label for="text">Strategy</label>
+    <input type="text" class="form-control" id="instrument" value="" name="name" required />
+  </div>
+   <button type="submit" formaction="next" type="submit" value="next" class="btn btn-default">Next</button> -->
+
+   <a class="btn btn-default" id="clear" href="{% url 'stratclear' %}">Clear</a>
+   <a class="btn btn-default" id="clear" href="{% url 'stratAnd' %}">And</a>
+   <a class="btn btn-default" id="clear" href="{% url 'stratOr' %}">Or</a>
+   <br>
+   <br>
+
+   <button class="btn btn-primary" type="submit"  formaction="submit" value="Submit" class="btn btn-default">Submit</button>  
+   </form>
+
+
+
+  
+
+
+
+  </div>
+
+
+  </div>
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+       <!--  <form action="" method="POST">
+          {% csrf_token %}
+          <div class="heading">
+           <h1>Enter the strategy details</h1>
+           </div>
+       
+          <p><b>Instrument:</b> 
+            
+          <input type="text" id="inst" name="instrument" value="{{comp.token}}"> ({{comp.name}})
+          
+          </p>
+          
+          <div class="Indicator">
+            <p><b>Select an Indicator  </b>  
+             <select id="indicatorselect" name="indicator1">
+                <option value="1">Moving Average</option>
+                <option value="2">RSI</option>
+                <option value="3">Price</option>
+                <option value="4">High</option>
+                <option value="5">Low</option>
+             </select>
+            </p>
+          </div>
+          <div class="indicator1option1"></div>
+          <div class="indicator1option1"></div>
+          
+          <div class="Comparator" >
+            <p><b>Select a Comparator  </b>
+              <select id="comparatorselect" name="comparator">
+                <option value="1">Greater than</option>
+                <option value="2">Lower than</option>
+                </select>
+            </p>
+          </div>
+          <p></p>
+          <div class="Indicator2">
+     
+            <p><b>Select an Indicator to compare to </b>  
+             <select id="indicatorselect2" name="indicator2">
+                <option value="MovingAverage">Moving Average</option>
+                <option value="RSI">RSI</option>
+                <option value="Price">Price</option>
+                <option value="High">High</option>
+                <option value="Low">Low</option>
+             </select>
+             </p>
+             <p> </p>
+          </div>
+            <div class="indicator1option1"></div>
+          <div class="indicator1option1"></div>
+          
+          <b>Strategy:</b>
+          <input type="text" name="name" value="">
+          <input formaction="submit" type="submit" value="Submit"/>
+        </form>
+        </div>
+        <p></p>
+ -->
+
+
+
+
+    </div>
+  </div>
+
+
+    <script>
+    function myFunction() {
+      var input, filter, ul, li, a, i;
+      input = document.getElementById("mySearch");
+      filter = input.value.toUpperCase();
+      ul = document.getElementById("myMenu");
+      li = ul.getElementsByTagName("li");
+      for (i = 0; i < li.length; i++) {
+        a = li[i].getElementsByTagName("a")[0];
+        if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
+          li[i].style.display = "";
+        } else {
+          li[i].style.display = "none";
+        }
+      }
+    }
+    function ind1()
+     {
+   
+      var x = document.getElementById("select1").value;
+      var y = document.getElementById("indicator1option").value;
+    
+      if(x=="MovingAverage")
+      {
+         
+        document.getElementById("ma1").style.visibility="visible";
+      }
+      else if(x=="BollingerBand")
+      {
+        document.getElementById("boll1").style.visibility="visible";
+      }
+      
+    }
+     function ind2()
+     {
+      var x = document.getElementById("mySelect").value;
+      
+    }
+    function compselect()
+    {
+       document.getElementById("id_instrument").innerHTML="{{comp.token}}";
+    }
+    </script>
+    </body>
+    </html>

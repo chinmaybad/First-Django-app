@@ -1,0 +1,13 @@
+
+{% extends 'blog/base.html' %}
+{% block content %}
+    {% for company in companies %}
+        <div class="post">
+            <div class="date">
+                {{ company.name }}
+            </div>
+           {{ company.token }}</a></h1>
+            <p>{{ linebreaksbr }}</p>
+        </div>
+    {% endfor %}
+{% endblock %}

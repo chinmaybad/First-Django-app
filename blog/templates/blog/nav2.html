@@ -1,0 +1,306 @@
+
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+    <style>
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    * {
+      box-sizing: border-box;
+      font-size: 18px;
+    }
+    /* Create a column layout with Flexbox */
+    .row {
+      display: flex;
+    }
+    #ma1{
+      visibility: hidden;
+    }
+    #boll1{
+      visibility: hidden;
+    }
+    
+    /* Left column (menu) */
+    .left {
+      flex: 15%;
+      height: 100vh;
+     
+      padding-left: 20px;
+      /*padding: 10px 0;*/
+    }
+    .left h2 {
+      padding-left: 8px;
+    }
+ /*   #inst {
+       color: #7d7d7d;
+    }*/
+    /* Right column (page content) */
+    .right {
+      flex: 100%;
+      padding-left:65px;
+      margin-top: 20px;
+    }
+    .heading h1{
+      font-family: "Times New Roman", Times, serif;
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+    .right select {
+      font-size: 14px;
+      background-color:#ffffff;
+      border: hidden;
+      color: #000000;
+    }
+    .right p{
+      font-size: 16px;
+    }
+    .right b{
+      font-size: 16px;
+    }
+    .right input{
+      font-size: 14px;
+    }
+    #form1{
+          width: 400px;
+          height: 80px;
+    }
+    .optional
+    {
+      margin-left: 420px;
+      height: 100px;
+      width: 400px;
+   
+    }
+   
+  
+    /* Style the search box */
+    #mySearch {
+      width: 100%;
+      font-size: 15px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      padding-top: 10px;
+      
+      padding-bottom: 5px;
+      padding-left: 11px;
+      border:1px solid #ddd;
+    }
+    /* Style the navigation menu inside the left column */
+    #myMenu {
+      list-style-type: none;
+      padding: 0;
+      margin: 0;
+      /*width:30px;*/
+      overflow: auto;
+      height: 100vh;
+    }
+    .navbar { margin-bottom: 10px;
+    background-color:#000000; } 
+    #naav a 
+    { 
+    color: #ffffff; }
+     #naav li a 
+    { 
+    color: #ffffff; }
+    #myMenu li a {
+      backgrxound-color: #fefefe;
+      padding: 12px;
+      text-decoration: none;
+      font-size: 14px;
+      color: #6d6d6d;
+      display: block
+    }
+    #myMenu li a:hover {
+      background-color: #eee;
+    }
+    </style>
+    </head>
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <body>
+  <!-- Navigation Bar -->
+  {% load extras %}
+
+
+      <nav class="navbar navbar-default" id="naav" >
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="#">Sabertooth</a>
+        </div>
+        <ul class="nav navbar-nav">
+          <li><a href="{% url 'clist' %}">Home</a></li>
+          <li><a href="{% url 'manage' %}">Manage</a></li>
+          <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+          <li><a href="{% url 'stratgroup' %}">Strategy Group</a></li>
+        </ul>
+      </div>
+  </nav>
+
+
+    <div class="row">
+      <div class="left" style="background-color:#fbfbfb;">
+
+        <input type="text" id="mySearch" onkeyup="myFunction()" placeholder="Search.." title="Type in a category">
+        <ul id="myMenu">
+         {% for company in companies %}
+         <li><a href="{% url 'clist_detail' pk=company.pk %}" onclick="compselect()">{{company.fullname}}</a></li>  
+         {% endfor %}
+        
+          
+          
+        </ul>
+      </div>
+      
+      <div class="right" style="background-color:#ffffff">
+
+        <div id="form1"> 
+          <form action="" method="POST">
+            {% csrf_token %}
+            <h1>Indicator 1: {{strat_obj.indicator1.name}}</h1><br>
+
+            {% for attr, value in fieldlist1.items %}
+
+              {% if fieldlist1|length == 1 %}
+                <p>No attributes</p>
+
+              {% endif %}
+
+              {% if forloop.counter == 1 %}
+
+              {% else %}
+                <div class="form-group">
+                <label for="{{attr}}1">Select {{attr}}:</label>
+
+                {% if not choice|hasattribute:attr  %}
+                  <input type="text" class="form-control" id="{{attr}}1" name="{{attr}}1" value="{{value}}" required />
+                  </div>
+                
+                {% else %}      
+      <!-- <p>{{choice|get_attr:attr}}</p> -->
+               
+                  <select class="form-control" id="{{attr}}1" name="{{attr}}1" onchange="ind1()">
+                  {% for field in choice|get_attr:attr %}
+                      <option value="{{field}}">{{field}}</option>
+                  {% endfor %}
+                </select>
+
+                  </div>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            <input type="hidden" name="for1" value={{fieldlist1|length}} />
+            <p>{{forloop.counter}}</p>
+            <br>
+            <h1>Indicator 2: {{strat_obj.indicator2.name}}</h1><br>
+
+            {% for attr, value in fieldlist2.items %}
+          
+              {% if fieldlist2|length == 1 %}
+                <p>No attributes</p>
+
+              {% endif %}
+
+              {% if forloop.counter == 1 %}
+
+              {% else %}
+
+                {% if not choice|hasattribute:attr  %}
+                  <div class="form-group">
+                  <label for="{{attr}}2">Select {{attr}}</label>
+                  <input type="text" class="form-control" id="{{attr}}2" name="{{attr}}2" value={{value}} required />
+                  </div>
+      
+                {% else %}
+
+                  <div class="form-group">
+                  <label for="{{attr}}2">Select {{attr}}:</label>
+                  <select class="form-control" id="{{attr}}2" name="{{attr}}2" onchange="ind1()">
+                  {% for field in choice|get_attr:attr %}
+
+                    <option value="{{field}}">{{field}}</option>
+                  {% endfor %}
+                  </select>
+                  </div>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+            <p>{{forloop.counter}}</p>
+            <input type="hidden" name="for2" value={{fieldlist2|length}} />
+            <input type="hidden" name="strat" value={{strat}} />
+            <br>
+          
+            <button type="submit" id="sub" formaction="submit" type="submit" value="Submit" class="btn btn-default">Submit</button>
+</form>
+</div>
+</div>
+     
+
+  
+
+
+<!--  -->
+
+  
+
+    <script>
+    function myFunction() {
+      var input, filter, ul, li, a, i;
+      input = document.getElementById("mySearch");
+      filter = input.value.toUpperCase();
+      ul = document.getElementById("myMenu");
+      li = ul.getElementsByTagName("li");
+      for (i = 0; i < li.length; i++) {
+        a = li[i].getElementsByTagName("a")[0];
+        if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
+          li[i].style.display = "";
+        } else {
+          li[i].style.display = "none";
+        }
+      }
+    }
+    function ind1()
+     {
+   
+      var x = document.getElementById("select1").value;
+      var y = document.getElementById("indicator1option").value;
+    
+      if(x=="MovingAverage")
+      {
+         
+        document.getElementById("ma1").style.visibility="visible";
+      }
+      else if(x=="BollingerBand")
+      {
+        document.getElementById("boll1").style.visibility="visible";
+      }
+      
+    }
+     function ind2()
+     {
+      var x = document.getElementById("mySelect").value;
+      
+    }
+    function compselect()
+    {
+       document.getElementById("id_instrument").innerHTML="{{comp.token}}";
+    }
+    </script>
+    </body>
+    </html>

@@ -1,0 +1,13 @@
+import csv
+import os
+path =  "F:\work\Sabretooth\kite" 
+os.chdir(path) 
+from blog.models import Companies 
+with open('instruments_NSE.csv') as csvfile:
+	reader = csv.DictReader(csvfile)
+	for row in reader:
+		p = Companies(token=row['instrument_token'], name=row['tradingsymbol'],fullname=row['name'])
+		p.save()
+
+
+exit()
