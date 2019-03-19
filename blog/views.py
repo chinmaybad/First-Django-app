@@ -355,6 +355,7 @@ def delete_all(request):
 	r = Refreshed(name="Strategy_Group")
 	r.save()
 	print("\nAdded refresh object")
+	return redirect('manage')
 
 
 
