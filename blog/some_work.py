@@ -112,6 +112,7 @@ class Work(object):
 		t.start()
 
 		for s in strats_to_update:
+			# try:
 			if(s.indicator1.name not in ['price', 'volume']):
 				if(s.indicator1.name == 'number' or force or self.min_count % self.time_map[s.indicator1.interval]  ==  0):
 					self.strat_data[s.pk]['indicator1'] = s.indicator1.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))
@@ -119,6 +120,8 @@ class Work(object):
 			if(s.indicator2.name not in ['price', 'volume']):
 				if(s.indicator2.name == 'number' or force or self.min_count % self.time_map[s.indicator2.interval]  ==  0):
 					self.strat_data[s.pk]['indicator2'] = s.indicator2.evaluate(kite_fetcher = self.kf, instrument = int(s.instrument))		
+			# except:
+			# 	pass
 		self.min_count += 1
 
 
@@ -219,7 +222,7 @@ class Work(object):
 			strategy_meta = df.to_dict()
 
 			self.task.update_state(state='PROGRESS', meta={'strategy_meta':strategy_meta, 'strategy_group_meta':strategy_group_meta})
-			print(strategy_meta)
+			# print(strategy_meta)
 			print('\n------\n')
 			print(strategy_group_meta)
 

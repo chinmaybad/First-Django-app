@@ -90,7 +90,7 @@ Shinohara Intensity Ratio
 Stochastic Momentum Index
 		Stochastics
 		Supertrend
-Swing Index
+		Swing Index
 TRIX
 Time Series Forecast
 Trade Volume Index

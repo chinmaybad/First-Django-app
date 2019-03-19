@@ -50,6 +50,7 @@ class Choices():
 	field = list()
 	PMO_type = list()
 	use_volume = list()
+	alligator_field = list()
 
 	def __init__(self):
 		 self.interval = ['minute', 'day', '3minute','5minute','10minute','15minute','30minute','60minute']
@@ -61,6 +62,7 @@ class Choices():
 		 self.field = ["close", "open", "high", "low"]
 		 self.PMO_type = ['PMO', 'PMO_signal']
 		 self.use_volume = ['Yes', 'No']
+		 self.alligator_field = ['Jaw', 'Teeth', 'Lips']
 
 
 
@@ -528,11 +530,10 @@ class True_Range(Indicator):	#test pending
 	interval = models.CharField(max_length=100, default='minute')	
 
 	def evaluate(self, kite_fetcher, instrument):
-		period = int(self.period)
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
 
 		result = talib.TRANGE(high = df['high'], low = df['low'], close = df['close'])
-		return np.round(result, 4)
+		return np.round(result.iloc[-1], 4)
 
 	def __str__(self):
 		return "True Range( "+ self.interval +")"
@@ -547,7 +548,7 @@ class ATR(Indicator):
 		df = self.get_large_data(kite_fetcher=kite_fetcher, instrument=instrument)
 
 		result = talib.ATR(high = df['high'], low = df['low'], close = df['close'], timeperiod = period)
-		return np.round(result, 4)
+		return np.round(result.iloc[-1], 4)
 
 	def __str__(self):
 		return "ATR( "+ self.period +", "+ self.interval +")"
@@ -568,9 +569,9 @@ class ATR_bands(Indicator):		#test pending
 		result = talib.ATR(high = df['high'], low = df['low'], close = df['close'], timeperiod = period)
 
 		if(self.band_type == 'upper'):
-			result = df[self.field].iloc[-1] + shift*result
+			result = df[self.field].iloc[-1] + shift * result.iloc[-1]
 		elif(self.band_type == 'lower'):
-			result = df[self.field].iloc[-1] - shift*result
+			result = df[self.field].iloc[-1] - shift * result.iloc[-1]
 		else:
 			result = df[self.field].iloc[-1]
 		return np.round(result, 4)
@@ -702,10 +703,9 @@ class Swing_Index(Indicator):		#test_pending
 
 	def evaluate(self, kite_fetcher, instrument):
 		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
-		dailylimit = int(self.limit_move_value) 	#https://www.prorealcode.com/prorealtime-indicators/wilders-accumulative-swing-index-asi/
-		# In case of commodities with a defined daily limit (maximum move in one direction) add the real value.
-		# If trading stocks - where there is not a maximum daily limit - you can use any value you want.
-		o, h , l , c = df['open'].iloc[-1], df['open'].iloc[-1], df['high'].iloc[-1], df['low'].iloc[-1], df['close'].iloc[-1]
+		dailylimit = float(self.limit_move_value) 	#https://www.prorealcode.com/prorealtime-indicators/wilders-accumulative-swing-index-asi/
+
+		o, h , l , c = df['open'].iloc[-1], df['high'].iloc[-1], df['low'].iloc[-1], df['close'].iloc[-1]
 		prev_o, prev_h, prev_l, prev_c = df['open'].iloc[-2], df['high'].iloc[-2], df['low'].iloc[-2], df['close'].iloc[-2]		
 
 		AbsHighClose = abs(h - prev_c)
@@ -717,8 +717,7 @@ class Swing_Index(Indicator):		#test_pending
 		CloseOpenYesterday = prev_c - prev_o
 
 		#computation K
-		k=max(AbsHighClose,AbsLowClose)
-			 
+		k=max(AbsHighClose,AbsLowClose)			 
 		# Computation R
 		partialR=max(AbsHighClose,max(AbsLowClose,AbsMaxMin))
 
@@ -731,14 +730,88 @@ class Swing_Index(Indicator):		#test_pending
 			r = AbsLowClose -0.5 * AbsHighClose + 0.25 * AbsCloseOpen
 
 		if r != 0:
-			SwingIdx = 50*((  CloseClose + 0.50 * CloseOpenToday + 0.25 * CloseOpenYesterday  ) / r ) *( K / dailylimit )
+			SwingIdx = 50*((  CloseClose + 0.50 * CloseOpenToday + 0.25 * CloseOpenYesterday  ) / r ) *( k / dailylimit )
 
 		# AccumulativeSwingIdx = AccumulativeSwingIdx + SwingIdx
-
 		return np.round(SwingIdx, 3)
 
 	def __str__(self):
 		return "Swing index("+ self.interval +", "+ self.limit_move_value +")"
+
+class Swing_Index(Indicator):		#test_pending
+	interval = models.CharField(max_length=100, default='day')
+	limit_move_value = models.CharField(max_length=100, default='0.5')
+
+	def evaluate(self, kite_fetcher, instrument):
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		dailylimit = float(self.limit_move_value) 	#https://www.prorealcode.com/prorealtime-indicators/wilders-accumulative-swing-index-asi/
+
+		o, h , l , c = df['open'].iloc[-1], df['high'].iloc[-1], df['low'].iloc[-1], df['close'].iloc[-1]
+		prev_o, prev_h, prev_l, prev_c = df['open'].iloc[-2], df['high'].iloc[-2], df['low'].iloc[-2], df['close'].iloc[-2]		
+
+		AbsHighClose = abs(h - prev_c)
+		AbsLowClose = abs(l - prev_c)
+		AbsCloseOpen = abs(prev_c - prev_o)
+		AbsMaxMin = abs(h - l)
+		CloseClose = c - prev_c
+		CloseOpenToday = c - o
+		CloseOpenYesterday = prev_c - prev_o
+
+		#computation K
+		k=max(AbsHighClose,AbsLowClose)			 
+		# Computation R
+		partialR=max(AbsHighClose,max(AbsLowClose,AbsMaxMin))
+
+		if AbsHighClose == partialR :
+			r = AbsHighClose - 0.5 * AbsLowClose + 0.25 * AbsCloseOpen
+		else:
+			r = AbsMaxMin + 0.25 * AbsCloseOpen
+
+		if AbsLowClose == partialR:
+			r = AbsLowClose -0.5 * AbsHighClose + 0.25 * AbsCloseOpen
+
+		if r != 0:
+			SwingIdx = 50*((  CloseClose + 0.50 * CloseOpenToday + 0.25 * CloseOpenYesterday  ) / r ) *( k / dailylimit )
+
+		# AccumulativeSwingIdx = AccumulativeSwingIdx + SwingIdx
+		return np.round(SwingIdx, 3)
+
+	def __str__(self):
+		return "Swing index("+ self.interval +", "+ self.limit_move_value +")"
+
+
+class Alligator(Indicator):	
+	interval = models.CharField(max_length=100, default='minute')
+	jaw_period = models.CharField(max_length=100, default='13')
+	jaw_offset = models.CharField(max_length=100, default='8')
+	teeth_period = models.CharField(max_length=100, default='8')
+	teeth_offset = models.CharField(max_length=100, default='5')
+	lips_period = models.CharField(max_length=100, default='5')
+	lips_offset = models.CharField(max_length=100, default='3')
+	alligator_field = models.CharField(max_length=100, default='Jaw')
+
+	def evaluate(self, kite_fetcher, instrument):
+		df = self.get_small_data(kite_fetcher=kite_fetcher, instrument=instrument)
+		
+		if(self.alligator_field == 'Jaw'):	#blue
+			period = int(self.jaw_period)
+			offset = int(self.jaw_offset)
+		elif(self.alligator_field == 'Teeth'):	#red
+			period = int(self.teeth_period)
+			offset = int(self.teeth_offset)
+		else:									#green
+			period = int(self.lips_period)
+			offset = int(self.lips_offset)
+
+		ma = talib.MA(df['close'], timeperiod=period)	
+
+		print(str(self) + " : " + str(ma.iloc[-10:]))	
+
+		return np.round(ma.iloc[-1 * offset - 1] , 3)
+
+	def __str__(self):
+		return "Alligator("+ self.interval +", "+ self.alligator_field +")"
+
 
 
 class Strategy(models.Model):
