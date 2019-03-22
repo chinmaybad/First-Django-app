@@ -19,13 +19,12 @@ logger = logging.getLogger(__name__)
 
 
 
-instrumentlist=list()
-strategyids=list() #Used in Nav and StratGroup
 
-stratstring=str()
-stratstringdisplay=str()
-strategygrouplist=list()
-logiclist=list()
+# Global Variables
+Instrument_List=list()
+Strategy_Ids=list() #Used in Nav and StratGroup
+Strategy_String=str()
+Strategy_String_Display=str()
 
 
 def post_list(request):
@@ -36,7 +35,7 @@ def post_detail(request, pk):
 	return render(request, 'blog/post_detail.html', {'post': post})
 
 def clist(request):
-	companies = Companies.objects.all()
+	Companies_List = Companies.objects.all()
 
 	task_id = AT.get_task_id()
 
@@ -50,63 +49,63 @@ def clist(request):
 
 
 	indilist=Indicator.__subclasses__()   
-	indicatorl=list()
+	Indicators_List=list()
 	for a in indilist:
 		a=str(a).split(".")[2]
 		a=a.split("\'")[0]
-		indicatorl.append(a) 
+		Indicators_List.append(a) 
 
-	return render(request, 'blog/nav.html', {'companies': companies,"indicatorlist":indicatorl})
+	return render(request, 'blog/nav.html', {'companies': Companies_List,"indicatorlist":Indicators_List})
 
 def clist_detail(request,pk):
-	global instrumentlist
+	global Instrument_List
 
 
-	companies = Companies.objects.all()
+	Companies_List = Companies.objects.all()
 	comp = get_object_or_404(Companies,pk=pk)
-	instrumentlist.append(comp.token)
+	Instrument_List.append(comp.token)
 	indilist=Indicator.__subclasses__()   
-	indicatorl=list()
+	Indicators_List=list()
 	for a in indilist:
 		a=str(a).split(".")[2]
 		a=a.split("\'")[0]
-		indicatorl.append(a) 
+		Indicators_List.append(a) 
 
-	return render(request, 'blog/nav.html', {'companies': companies,'comp':comp,"indicatorlist":indicatorl,"instrumentlist":str(instrumentlist)})
+	return render(request, 'blog/nav.html', {'companies': Companies_List,'comp':comp,"indicatorlist":Indicators_List,"instrumentlist":str(Instrument_List)})
 
 
 def clear(request):
 
 	print("clear called")
-	companies = Companies.objects.all()
+	Companies_List = Companies.objects.all()
 
-	global instrumentlist
-	instrumentlist.clear()
+	global Instrument_List
+	Instrument_List.clear()
 	indilist=Indicator.__subclasses__()   
-	indicatorl=list()
+	Indicators_List=list()
 	for a in indilist:
 		a=str(a).split(".")[2]
 		a=a.split("\'")[0]
-		indicatorl.append(a) 
+		Indicators_List.append(a) 
 
 
 	print("clear called")
 
-	return render(request, 'blog/nav.html', {'companies': companies,"indicatorlist":indicatorl})
+	return render(request, 'blog/nav.html', {'companies': Companies_List,"indicatorlist":Indicators_List})
 
 
 
 def updatestrategy(request,pk):
 	if request.method == 'POST':
 
-		global strategyids
-		for ids in strategyids:
+		global Strategy_Ids
+		for ids in Strategy_Ids:
 			sid=ids
 			strat = get_object_or_404(Strategy,pk=sid)
 			strat.indicator1 = strat.indicator1.down_cast()
 			strat.indicator2 = strat.indicator2.down_cast()
 
-			companies = Companies.objects.all()
+			Companies_List = Companies.objects.all()
 			# len1=int(request.POST.get('for1'))
 			# len2=int(request.POST.get('for2'))
 			
@@ -181,12 +180,12 @@ def updatestrategy(request,pk):
 			print('Indicator2 = '+str(s.indicator2.down_cast()))
 			print("done!!!!!!!!")
 
-		strategyids.clear()
+		Strategy_Ids.clear()
 		r = Refreshed(name="Strategy")
 		r.save()
 		print("\nAdded refresh object")
 
-		return render(request, "blog/nav.html",{'companies': companies})  
+		return render(request, "blog/nav.html",{'companies': Companies_List})  
 
 
 
@@ -195,9 +194,9 @@ def createstrategy(request,pk):
 	if request.method == 'POST':
 		if request.POST.get('indicator1') and request.POST.get('indicator2') and request.POST.get('comparator') and request.POST.get('name') and request.POST.get('instrument') :
 
-			global instrumentlist
-			global strategyids
-			for instruments in instrumentlist:
+			global Instrument_List
+			global Strategy_Ids
+			for instruments in Instrument_List:
 				strat=Strategy()             
 				strat.comparator= request.POST.get('comparator')
 				strat.name= request.POST.get('name')
@@ -211,28 +210,34 @@ def createstrategy(request,pk):
 				strat.task_id = "task_obj.id"
 				strat.save()
 				print(strat.id)
-				strategyids.append(strat.id)
+				Strategy_Ids.append(strat.id)
 		  
-			sq=strat.indicator1._meta.get_fields(include_parents=False)
-			print("SQ is ----------"+str(sq))
-			sp=list()
+			Indicator1_Fields=strat.indicator1._meta.get_fields(include_parents=False)
+		
+			# Indicator1_Fields_List=list()
+			Indicator1_Fields_Dict=dict()
+			Indicator2_Fields_Dict=dict()
 
-			for a in sq:
+			for a in Indicator1_Fields:
+				t=a
 				a=str(a).split(".")[2]
 				a=a.split("\'")[0]
-				sp.append(a)
+				# Indicator1_Fields_List.append(a)
+				Indicator1_Fields_Dict[a]=t.default
 
 
 
 
 
-			sq2=strat.indicator2._meta.get_fields(include_parents=False)
+			Indicator2_Fields=strat.indicator2._meta.get_fields(include_parents=False)
 			sp2=list()
 
-			for a in sq2:
+			for a in Indicator2_Fields:
+				t=a
 				a=str(a).split(".")[2]
 				a=a.split("\'")[0]
-				sp2.append(a)
+				# sp2.append(a)
+				Indicator2_Fields_Dict[a]=t.default
 
 			# indicator=Indicators.create(request.POST.get('indicator1'))
 			# if(request.POST.get('indicator1')=='MovingAverage'):
@@ -242,21 +247,21 @@ def createstrategy(request,pk):
 
 			# indicator.save()
 
-			companies = Companies.objects.all()  
+			Companies_List= Companies.objects.all()  
 			indilist=Indicator.__subclasses__() 
-			indicatorl=list()
+			Indicators_List=list()
 			for a in indilist:
 				a=str(a).split(".")[2]
 				a=a.split("\'")[0]
-				indicatorl.append(a)
+				Indicators_List.append(a)
 			choice=Choices()   
 			
-			instrumentlist.clear()          
+			Instrument_List.clear()          
 			
-			return render(request, "blog/nav2.html",{'companies': companies,"strat":strat.id,"fieldlist1":sp,"fieldlist2":sp2,"indicatorlist":indicatorl,"choice":choice, "strat_obj" : strat})
+			return render(request, "blog/nav2.html",{'companies': Companies_List,"strat":strat.id,"fieldlist1":Indicator1_Fields_Dict,"fieldlist2":Indicator2_Fields_Dict,"indicatorlist":Indicators_List,"choice":choice, "strat_obj" : strat})
 	else:
-		companies = Companies.objects.all()
-		return render(request, "blog/nav.html",{'companies': companies})  
+		Companies_List = Companies.objects.all()
+		return render(request, "blog/nav.html",{'companies': Companies_List})  
 
 
 def display_dashboard(request):    	
@@ -361,20 +366,20 @@ def delete_all(request):
 
 def stratgroup(request):
 
-	global strategyids
-	strategyids.clear()
+	global Strategy_Ids
+	Strategy_Ids.clear()
 
 	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
-	global stratstringdisplay
+	global Strategy_String_Display
 
 
-	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":Strategy_String_Display})
 
 
 def stratselect(request,pk):
 
 
-	global stratstring,strategyids,stratstringdisplay
+	global Strategy_String,Strategy_Ids,Strategy_String_Display
 
 	print("selected")
 
@@ -382,71 +387,71 @@ def stratselect(request,pk):
 	strat = get_object_or_404(Strategy,pk=pk)
 	
 
-	stratstring=stratstring+str(strat.pk)
-	stratstringdisplay=stratstringdisplay+" "+str(strat.name)+"("+str(strat.instrument)+")"
+	Strategy_String=Strategy_String+str(strat.pk)
+	Strategy_String_Display=Strategy_String_Display+" "+str(strat.name)+"("+str(strat.instrument)+")"
 
 
 	
 
 
-	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":Strategy_String_Display})
 
 
 
 def stratAnd(request):
 
-	global stratstring,stratstringdisplay
+	global Strategy_String,Strategy_String_Display
 
-	stratstring=stratstring+" and "
-	stratstringdisplay=stratstringdisplay+" and "
+	Strategy_String=Strategy_String+" and "
+	Strategy_String_Display=Strategy_String_Display+" and "
 
 	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
 	
 
 
-	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":Strategy_String_Display})
 
 
 def stratOr(request):
 
-	global stratstring,stratstringdisplay
+	global Strategy_String,Strategy_String_Display
 
-	stratstring=stratstring+" or "
-	stratstringdisplay=stratstringdisplay+" or "
+	Strategy_String=Strategy_String+" or "
+	Strategy_String_Display=Strategy_String_Display+" or "
 
 	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
 	
 
 
-	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstringdisplay})
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":Strategy_String_Display})
 
 
 
 def stratclear(request):
-	global stratstring, strategyids,stratstringdisplay
+	global Strategy_String, Strategy_Ids,Strategy_String_Display
 
 	strat_list = Strategy.objects.filter(~Q(name = "DO_NOT_DELETE"))
-	stratstring=""
-	stratstringdisplay=""
-	strategyids.clear()
+	Strategy_String=""
+	Strategy_String_Display=""
+	Strategy_Ids.clear()
 	
 
 
-	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":stratstring})
+	return render(request, 'blog/stratgroup.html',{"strat_list":strat_list,"stratstring":Strategy_String})
 
 def stratgroupsubmit(request):
 
-	global stratstring,stratstringdisplay
-	companies = Companies.objects.all() 
+	global Strategy_String,Strategy_String_Display
+	Companies_List = Companies.objects.all() 
 	print("here")
 
 	if request.method == 'POST':
 
 		group=Strategy_Group()
 		group.name=request.POST.get('groupname')
-		group.exp=stratstring
-		group.display = stratstringdisplay
-		print(stratstring)
+		group.exp=Strategy_String
+		group.display = Strategy_String_Display
+		print(Strategy_String)
 		group.save()
 
 		print("Group created with "+ group.name+"   "+group.exp)
@@ -455,10 +460,10 @@ def stratgroupsubmit(request):
 		r.save()
 
 
-		stratstring=""
-		stratstringdisplay=""
+		Strategy_String=""
+		Strategy_String_Display=""
 
-	return render(request, "blog/nav.html",{'companies': companies})  
+	return render(request, "blog/nav.html",{'companies': Companies_List})  
 
 
 
